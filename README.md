@@ -9,7 +9,35 @@
 1. Log into Habitica and find your Habitica user ID and token at https://habitica.com/user/settings/api
 2. Bookmark https://iymeko.github.io/strategitica/?id=[YOUR-HABITICA-USER-ID]&token=[YOUR-HABITICA-API-TOKEN] to see your tasks in calendar view
 
-## Limitations
+## Optional Features
+
+### Task Duration
+
+Strategitica can show a task's duration to the right of the task. It can also show the total duration for all tasks in a day. To use this feature, create a tag for each task duration you want to use. Each tag should end with the following blurb:
+
+> [strategitica|duration|##:##]
+
+For example, if you add a tag named "[strategitica|duration|00:15]" (without quotes) to a task, Strategitica will recognize this as a 15-minute task. You can add whatever text you want before the blurb--it's only important that the blurb is at the very end. For example, "My tag name here [strategitica|duration|00:15]" will work just the same.
+
+**Note:** As shown above, this only works for hh:mm format. For example, a tag for an hour should end with [strategitica|duration|01:00], not [strategitica|duration|1:00]. Something like [strategitica|duration|01:00:00] is also not supported.
+
+**Another Note:** If a task has more than one duration tag, Strategitica won't recognize that the task has a duration. Use only one duration tag on a task.
+
+### Task Time of Day
+
+Similarly to task durations, you can add a blurb to the end of a tag to tell Strategitica that a task should be completed in the morning, afternoon or evening. Tasks will be grouped by time of day.
+
+> [strategitica|morning]
+
+> [strategitica|afternoon]
+
+> [strategitica|evening]
+
+As with task durations, you can add whatever text you want before the blurb.
+
+**Note:** morning, afternoon and evening are the only supported times of day.
+
+## Limitations/Issues
 
 1. Habitica's API has a list of future due dates for each of your tasks, but it doesn't go on forever. It only seems to remember the next ~6 or so due dates. I'm hoping I'll be able to come up with a solution for this.
-2. See [other issues](https://github.com/iymeko/strategitica/issues)
+2. See [other issues](https://github.com/iymeko/strategitica/issues?q=is%3Aissue+is%3Aopen+label%3Acritical)
