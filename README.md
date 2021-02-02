@@ -37,7 +37,16 @@ As with task durations, you can add whatever text you want before the blurb.
 
 **Note:** morning, afternoon and evening are the only supported times of day.
 
+### "One-Time Dailies" ###
+
+Habitica users will probably know that there are dailies (recurring tasks) and to-do's (one-time tasks). Both have due dates, but as far as I can tell, there is no penalty for not completing a to-do on time like there is with dailies. If you're like me and you need that penalty as motivation to get your one-time tasks done, then "one-time dailies" might be for you. As with task duration tags and time of day tags, create a tag that ends with:
+
+> [strategitica|1td]
+
+Add this to a daily that's really just a one-time task, and Strategitica will know to only show that task on its due date, not on any of its recurring due dates.
+
 ## Limitations/Issues
 
-1. Habitica's API has a list of future due dates for each of your tasks, but it doesn't go on forever. It only seems to remember the next ~6 or so due dates. I'm hoping I'll be able to come up with a solution for this.
-2. See [other issues](https://github.com/iymeko/strategitica/issues?q=is%3Aissue+is%3Aopen+label%3Acritical)
+1. Strategitica doesn't show to-do's, only dailies. This is my top priority to fix.
+2. Habitica's API has a list of future due dates for each of your tasks, but it doesn't go on forever. It only seems to remember the next ~6 or so due dates. I'm hoping I'll be able to come up with a solution for this.
+3. See [other issues](https://github.com/iymeko/strategitica/issues?q=is%3Aissue+is%3Aopen+label%3Acritical)
