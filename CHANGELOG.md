@@ -6,16 +6,20 @@
 
 ### [Strategitica](https://github.com/iymeko/strategitica) Changelog
 
-## 1.0.1 (11 February, 2020)
+## 1.0.2 (11 February, 2021)
 
-* #18 resolved - Instead of having the user's API token as a URL parameter, there is now a login modal
+* [#18](https://github.com/iymeko/strategitica/issues/18) resolved - Instead of having the user's API token as a URL parameter, there is now a login modal
 * Updated readme to reflect above changes
 * Reorganized JS a lot by switching to Node modules
 * Other readme updates
 * Fixed an issue with the exp bar showing the wrong info
 
-Changes are in pull request #26.
+Changes are in [pull request #26](https://github.com/iymeko/strategitica/pull/21).
 
-## 1.0.0 (2 February, 2020)
+## 1.0.1 (4 February, 2021)
+
+* [#17](https://github.com/iymeko/strategitica/issues/17) resolved - Fixed refresh link
+
+## 1.0.0 (2 February, 2021)
 
 * Initial commit
