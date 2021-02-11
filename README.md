@@ -1,6 +1,6 @@
 # <img align="left" height="50" src="https://raw.githubusercontent.com/iymeko/strategitica/main/img/logo.png"> Strategitica
 
-## A calendar view for [Habitica](https://habitica.com/).
+## A calendar view for [Habitica](https://habitica.com/), by [@misscurmudgeon](https://habitica.com/profile/88aa06bb-ec69-43d8-b58a-e6df4aa608ac)
 
 > Welcome to Strategitica, a land conquered by a Habitican warrior during a time of great struggle in the Tasks War. After months of fighting a losing battle, the warrior realized that the only way to win was to somehow anticipate the enemy's movements. After much questing, the warrior found sacred tomes detailing how to harness the power of the legendary Habitican API. With this newfound power, the warrior commanded the API to foretell the enemy's movements. Using a fabled tactic known as a "calendar", the warrior organized this information so that each day's onslaught for the coming weeks could be examined in great detail. In no time at all, the warrior vanquished the evil tasks and colonized the territory the tasks abandoned. As the land was founded on the now revered principles of Information and Organization, the warrior dubbed this new land Strategitica.
 
