@@ -6,8 +6,9 @@
 
 ## How to Use
 
-1. Log into Habitica and find your Habitica user ID and token at https://habitica.com/user/settings/api
-2. Bookmark https://iymeko.github.io/strategitica/?id=[YOUR-HABITICA-USER-ID]&token=[YOUR-HABITICA-API-TOKEN] to see your tasks in calendar view
+Just go to https://iymeko.github.io/strategitica/ and enter your Habitica user ID and API token. Both can be found at https://habitica.com/user/settings/api. You may also go to https://iymeko.github.io/strategitica/?id=[YOUR-HABITICA-USER-ID] to pre-fill your user ID, if this saves time for you.
+
+**Note:** Once your ID/token are entered, if you think Strategitica might not be up-to-date (for example, maybe you left Strategitica's page alone for a day, or you made changes on habitica.com or the Habitica app after using Strategitica, etc.), **you can refresh your data by clicking Refresh in the menu**. This saves you from having to refresh the page and re-enter your ID/token every time you want up-to-date info. The page does data refreshes itself immediately after you make changes using Strategitica, but it can't detect changes made outside of Strategitica.
 
 ## Optional Features
 
@@ -37,6 +38,8 @@ As with task durations, you can add whatever text you want before the blurb.
 
 **Note:** morning, afternoon and evening are the only supported times of day.
 
+**Another Note:** If a task has more than one time of day tag, Strategitica won't recognize that the task has a time of day. Use only one time of day tag on a task.
+
 ### "One-Time Dailies" ###
 
 Habitica users will probably know that there are dailies (recurring tasks) and to-do's (one-time tasks). Both have due dates, but as far as I can tell, there is no penalty for not completing a to-do on time like there is with dailies. If you're like me and you need that penalty as motivation to get your one-time tasks done, then "one-time dailies" might be for you. As with task duration tags and time of day tags, create a tag that ends with:
@@ -45,8 +48,9 @@ Habitica users will probably know that there are dailies (recurring tasks) and t
 
 Add this to a daily that's really just a one-time task, and Strategitica will know to only show that task on its due date, not on any of its recurring due dates.
 
-## Limitations/Issues
+## Notable Limitations/Issues
 
-1. Strategitica doesn't show to-do's, only dailies. This is my top priority to fix.
-2. Habitica's API has a list of future due dates for each of your tasks, but it doesn't go on forever. It only seems to remember the next ~6 or so due dates. I'm hoping I'll be able to come up with a solution for this.
-3. See [other issues](https://github.com/iymeko/strategitica/issues?q=is%3Aissue+is%3Aopen+label%3Acritical)
+1. [Strategitica doesn't show to-do's, only dailies.](https://github.com/iymeko/strategitica/issues/19) This is pretty much my top priority to fix.
+2. [Not all of your tasks' due dates are shown](https://github.com/iymeko/strategitica/issues/20) due to a limitation with Habitica's API. It has a list of future due dates for each of your tasks, but it doesn't go on forever. It only seems to remember the next ~6 or so due dates. I'm hoping I'll be able to come up with a solution for this.
+3. [Strategitica doesn't run cron.](https://github.com/iymeko/strategitica/issues/12) I may implement this one day, but right now, if you start your day and cron hasn't run yet, you'll see yesterday's tasks as today's tasks in your calendar. So, use habitica.com or the Habitica app to run cron.
+4. [You can't edit task checkboxes yet.](https://github.com/iymeko/strategitica/issues/8) You can check and uncheck existing checkboxes, you just can't create new ones or edit/remove existing ones. Sorry, I just haven't gotten around to this yet.

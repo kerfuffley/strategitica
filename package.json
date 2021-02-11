@@ -1,0 +1,27 @@
+{
+    "type": "module",
+    "name": "strategitica",
+    "version": "1.0.0",
+    "description": "Displays Habitica tasks in calendar format, along with some other helpful info and a sleep toggle.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/iymeko/strategitica.git"
+    },
+    "keywords": [
+        "Habitica",
+        "calendar"
+    ],
+    "author": "Erica Peers",
+    "license": "GPL-3.0",
+    "bugs": {
+        "url": "https://github.com/iymeko/strategitica/issues"
+    },
+    "homepage": "https://github.com/iymeko/strategitica#readme",
+    "dependencies": {
+        "express": "^4.17.1"
+    }
+}

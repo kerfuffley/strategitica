@@ -27,17 +27,16 @@
         <div class="container-fluid px-2">
             <div class="row mx-n2 align-items-center">
                 <div class="col-auto px-2">
-                    <img src="img/logo-white.png" class="header-logo" alt="Strategitica">
+                    <img src="img/logo-white.png" class="header-logo" alt="Strategitica logo">
                 </div>
-                <div class="col px-2" id="strategitica-user"></div>
+                <div class="col px-2" id="strategitica-stats"></div>
                 <div class="col-auto px-2">
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i></button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             <a class="dropdown-item" href="#" id="strategitica-add-daily"><i class="fas fa-plus"></i> Add a Daily</a>
-                            <a class="dropdown-item" href="javascript:window.location.reload(true)"><i class="fas fa-redo"></i> Refresh</a>
-                            <a class="dropdown-item" id="strategitica-tavern-change"></a>
-                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-debug"><i class="fas fa-bug"></i> Debugging Info</a>
+                            <a class="dropdown-item" href="#" id="strategitica-refresh"><i class="fas fa-redo"></i> Refresh</a>
+                            <a class="dropdown-item" href="#" id="strategitica-tavern-change1"></a>
                             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-about"><i class="fas fa-info-circle"></i> About Strategitica</a>
                         </div>
                     </div>
@@ -51,6 +50,35 @@
     </div>
 
     <div id="strategitica-descriptions" class="d-none"></div>
+
+    <div class="modal fade" id="modal-login" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="modal-login-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-login-label"><img src="img/logo.png" class="mr-3" alt="Strategitica logo" height="25"> Welcome to Strategitica!</h5>
+                  </div>
+                  <div class="modal-body">
+                    <p>Enter your Habitica user ID and API token to continue. Both can be found <a href="https://habitica.com/user/settings/api" target="_blank" class="card-link">here</a>.</p>
+
+                    <form id="strategitica-login" method="POST" target="formPasswdSaveFix">
+                        <div class="row mb-3">
+                            <label for="user-id" class="col-sm-3 col-form-label">User ID</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" name="userId" id="user-id">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="api-token" class="col-sm-3 col-form-label">API Token</label>
+                            <div class="col-sm-9">
+                                <input type="password" class="form-control" name="apiToken" id="api-token">
+                            </div>
+                        </div>
+                        <input type="submit" class="btn btn-primary" value="Let's Go!"></input>
+                    </form>
+                  </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="modal-task" tabindex="-1" role="dialog" aria-labelledby="modal-task-label" aria-hidden="true">
         <div class="modal-dialog">
@@ -78,19 +106,6 @@
                         <li>The color on the left side of a task indicates its "value", <a href="https://habitica.fandom.com/wiki/Task_Value#Task_Colors" target="_blank">just like it does with Habitica.</a></li>
                         <!-- <li><span class="badge badge-pill badge-light"><i class="fas fa-star" aria-hidden="true"></i>#</span> - This is the difficulty rating for the day. It's just a sum of the difficulty of each task that's still due on that day.</li> -->
                     </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modal-debug" tabindex="-1" role="dialog" aria-labelledby="modal-debug-label" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modal-debug-label">Debugging Info</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                </div>
-                <div class="modal-body" id="strategitica-debug">
                 </div>
             </div>
         </div>
@@ -126,7 +141,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="js/scripts.js"></script>
+    <script type="module" src="index.js"></script>
 </body>
 
 </html>
