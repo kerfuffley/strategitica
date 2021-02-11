@@ -500,7 +500,7 @@ function modalHtml(task, userTags) {
         if (task.tags != null && task.tags.length > 0) {
             bodyHtmlStatic += '<tr class="task-param-static-js"><th>Tags</th><td>';
             task.tags.forEach(function (value) {
-                bodyHtmlStatic += '<span class="badge badge-pill badge-primary">' + userTags[value] + '</span> ';
+                bodyHtmlStatic += '<span class="badge badge-pill badge-primary badge-tag">' + userTags[value] + '</span> ';
             });
             bodyHtmlStatic += '</td></tr>';
         }

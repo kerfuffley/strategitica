@@ -14,7 +14,9 @@
 * Other readme updates
 * Fixed an issue with the exp bar showing the wrong info
 
-Changes are in [pull request #26](https://github.com/iymeko/strategitica/pull/21).
+Changes above are in [pull request #26](https://github.com/iymeko/strategitica/pull/21). Also:
+
+* Stopped tags with long names from going outside the task modal on small screens
 
 ## 1.0.1 (4 February, 2021)
 
