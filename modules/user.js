@@ -1,10 +1,9 @@
 import * as Utils from './utils.js';
 
 class User {
-    constructor(id, token, client) {
+    constructor(id, token) {
         this.id = id;
         this.token = token;
-        this.client = client; // I know, the x-client isn't something belonging to a user, but I need to reference it, so...
         this.tags = null;
         this.tasks = null;
         this.name = '';
@@ -26,7 +25,6 @@ class User {
     create() {
         var userId = this.id;
         var apiToken = this.token;
-        var client = this.client;
 
         let userTags = null;
         userTags = function () {
@@ -40,7 +38,7 @@ class User {
                     contentType: 'application/json',
                     cache: false,
                     beforeSend: function (xhr) {
-                        xhr.setRequestHeader('x-client', client);
+                        xhr.setRequestHeader('x-client', Utils.appClient);
                         xhr.setRequestHeader('x-api-user', userId);
                         xhr.setRequestHeader('x-api-key', apiToken);
                     }
@@ -89,7 +87,7 @@ class User {
                     contentType: 'application/json',
                     cache: false,
                     beforeSend: function (xhr) {
-                        xhr.setRequestHeader('x-client', client);
+                        xhr.setRequestHeader('x-client', Utils.appClient);
                         xhr.setRequestHeader('x-api-user', userId);
                         xhr.setRequestHeader('x-api-key', apiToken);
                     }
@@ -130,7 +128,7 @@ class User {
                     contentType: 'application/json',
                     cache: false,
                     beforeSend: function (xhr) {
-                        xhr.setRequestHeader('x-client', client);
+                        xhr.setRequestHeader('x-client', Utils.appClient);
                         xhr.setRequestHeader('x-api-user', userId);
                         xhr.setRequestHeader('x-api-key', apiToken);
                     }
@@ -181,7 +179,6 @@ class User {
     changeTavernStatus() {
         var userId = this.id;
         var apiToken = this.token;
-        var client = this.client;
         var isSleeping = this.isSleeping;
 
         try {
@@ -194,7 +191,7 @@ class User {
                 contentType: 'application/json',
                 cache: false,
                 beforeSend: function (xhr) {
-                    xhr.setRequestHeader('x-client', client);
+                    xhr.setRequestHeader('x-client', Utils.appClient);
                     xhr.setRequestHeader('x-api-user', userId);
                     xhr.setRequestHeader('x-api-key', apiToken);
                 }

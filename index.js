@@ -4,7 +4,7 @@ import * as Task from './modules/task.js';
 
 $('#modal-login').modal('show');
 
-let strategiticaClient = '88aa06bb-ec69-43d8-b58a-e6df4aa608ac-Strategitica';
+let appClient = Utils.appClient;
 
 let ID = Utils.getUrlParameter('id');
 let token = '';
@@ -30,7 +30,7 @@ $('#strategitica-login').submit(function(event){
  * Get the user's data and put their info into the page.
  */
 function loadAll(showMessage) {
-    user = new User(ID, token, strategiticaClient);
+    user = new User(ID, token);
     user.create();
 
     loadUserStats();
@@ -107,7 +107,7 @@ function completeTask(button) {
             contentType: 'application/json',
             cache: false,
             beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-client', strategiticaClient);
+                xhr.setRequestHeader('x-client', appClient);
                 xhr.setRequestHeader('x-api-user', ID);
                 xhr.setRequestHeader('x-api-key', token);
             }
@@ -294,7 +294,7 @@ function saveTask(button) {
                 contentType: 'application/json',
                 cache: false,
                 beforeSend: function (xhr) {
-                    xhr.setRequestHeader('x-client', strategiticaClient);
+                    xhr.setRequestHeader('x-client', appClient);
                     xhr.setRequestHeader('x-api-user', ID);
                     xhr.setRequestHeader('x-api-key', token);
                 }
@@ -347,7 +347,7 @@ function deleteTask(button) {
                 dataType: 'json',
                 contentType: 'application/json',
                 beforeSend: function (xhr) {
-                    xhr.setRequestHeader('x-client', strategiticaClient);
+                    xhr.setRequestHeader('x-client', appClient);
                     xhr.setRequestHeader('x-api-user', ID);
                     xhr.setRequestHeader('x-api-key', token);
                 }
@@ -402,7 +402,7 @@ function scoreChecklistItem(checkbox) {
             dataType: 'json',
             contentType: 'application/json',
             beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-client', strategiticaClient);
+                xhr.setRequestHeader('x-client', appClient);
                 xhr.setRequestHeader('x-api-user', ID);
                 xhr.setRequestHeader('x-api-key', token);
             }

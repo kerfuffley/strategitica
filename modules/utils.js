@@ -1,3 +1,5 @@
+const appClient = '88aa06bb-ec69-43d8-b58a-e6df4aa608ac-Strategitica';
+
 const monthNames = [
     ['January', 'Jan'],
     ['February', 'Feb'],
@@ -110,4 +112,4 @@ function updateToast(type, title, body) {
     el.toast('show');
 }
 
-export { monthNames, frequencyPlurals, onResize, getUrlParameter, getDateKey, getNumberOrdinal, getLastDayOfMonth, formatDuration, updateToast };
+export { appClient, monthNames, frequencyPlurals, onResize, getUrlParameter, getDateKey, getNumberOrdinal, getLastDayOfMonth, formatDuration, updateToast };
