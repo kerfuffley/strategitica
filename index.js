@@ -42,75 +42,27 @@ function loadAll(showMessage) {
 }
 
 /**
- * Changes the user's tavern status based on the isSleeping parameter. Also
- * calls {@link showTavernStatus} to update the DOM with the user's current
- * tavern status.
- * 
- * @param {boolean} isSleeping - true if the user is resting in the tavern
- * @see {@link https://habitica.com/apidoc/#api-User-UserSleep|User - Make the user start / stop sleeping (resting in the Inn)}
+ * Updates the DOM with the user's current tavern status.
  */
-function changeTavernStatus(isSleeping) {
-    try {
-        $.ajax({
-            url: 'https://habitica.com/api/v3/user/sleep',
-            type: 'POST',
-            data: !isSleeping,
-            dataType: 'json',
-            contentType: 'application/json',
-            cache: false,
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-client', strategiticaClient);
-                xhr.setRequestHeader('x-api-user', ID);
-                xhr.setRequestHeader('x-api-key', token);
-            }
-        })
-            .done(function (data) {
-                showTavernStatus(data.data);
-                Utils.updateToast('success', 'Tavern Status', 'You have successfully ' + (data.data === true ? 'entered' : 'left') + ' the tavern.');
-            })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                let message = 'Couldn\'t update tavern status: <br>' + jqXHR.status + ' Error';
-
-                if ('responseJSON' in jqXHR) {
-                    if ('message' in jqXHR.responseJSON) {
-                        message += ' - ' + jqXHR.responseJSON.message;
-                    }
-                }
-
-                Utils.updateToast('error', 'Error', message);
-            });
-    }
-    catch (error) {
-        $('#strategitica-tavern-change1').hide();
-        Utils.updateToast('error', 'Error', 'Couldn\'t update tavern status: <br>' + error.responseText);
-    }
-}
-
-/**
- * Updates the DOM with the provided tavern status.
- * 
- * @param {boolean} isSleeping - true if the user is resting in the tavern
- */
-function showTavernStatus(isSleeping) {
+function showTavernStatus() {
     let tavernStatusHtml = '';
     let tavernChangeHtml = '';
 
-    $('#strategitica-tavern-change1').data('sleeping', !isSleeping);
-
-    if (isSleeping === true) {
+    if (user.isSleeping === true) {
         tavernStatusHtml = '<div class="bg-warning text-body text-center py-1"><small class="text-center">You are resting in the Tavern. | <a class="text-dark" href="#" id="strategitica-tavern-change2">Leave the tavern</a></small></div>';
         tavernChangeHtml = '<i class="fas fa-door-open"></i> Leave the tavern';
     }
-    if (isSleeping === false) {
+    if (user.isSleeping === false) {
         tavernChangeHtml = '<i class="fas fa-bed"></i> Rest at the tavern';
     }
 
     $('#strategitica-tavern-status').html(tavernStatusHtml);
     $('#strategitica-tavern-change1').html(tavernChangeHtml);
 
-    if (isSleeping === true) {
+    if (user.isSleeping === true) {
         $('#strategitica-tavern-change2').on('click', function() {
-            changeTavernStatus(true);
+            user.changeTavernStatus();
+            showTavernStatus();
         });
     }
 
@@ -119,7 +71,7 @@ function showTavernStatus(isSleeping) {
 
 /**
  * Gets user info via the Habitica API and updates the DOM with said info. Also
- * passes the user's current tavern status to {@link changeTavernStatus}.
+ * calls {@link showTavernStatus}.
  */
 function loadUserStats() {
     let output = '<div class="row mx-n1">' +
@@ -132,7 +84,7 @@ function loadUserStats() {
         '</div>';
 
     $('#strategitica-stats').html(output);
-    showTavernStatus(user.isSleeping);
+    showTavernStatus();
 }
 
 /**
@@ -946,7 +898,8 @@ $('#strategitica-refresh').on('click', function() {
 });
 
 $('#strategitica-tavern-change1').on('click', function() {
-    changeTavernStatus($(this).data('sleeping'));
+    user.changeTavernStatus();
+    showTavernStatus();
 });
 
 

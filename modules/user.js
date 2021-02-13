@@ -1,3 +1,5 @@
+import * as Utils from './utils.js';
+
 class User {
     constructor(id, token, client) {
         this.id = id;
@@ -168,6 +170,57 @@ class User {
             this.mpMax = userInfo.stats.maxMP;
             this.isSleeping = userInfo.preferences.sleep;
         }
+    }
+
+    /**
+     * Changes the user's tavern status to the opposite of whatever it
+     * currently is.
+     * 
+     * @see {@link https://habitica.com/apidoc/#api-User-UserSleep|User - Make the user start / stop sleeping (resting in the Inn)}
+     */
+    changeTavernStatus() {
+        var userId = this.id;
+        var apiToken = this.token;
+        var client = this.client;
+        var isSleeping = this.isSleeping;
+
+        try {
+            $.ajax({
+                async: false,
+                url: 'https://habitica.com/api/v3/user/sleep',
+                type: 'POST',
+                data: !isSleeping,
+                dataType: 'json',
+                contentType: 'application/json',
+                cache: false,
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('x-client', client);
+                    xhr.setRequestHeader('x-api-user', userId);
+                    xhr.setRequestHeader('x-api-key', apiToken);
+                }
+            })
+                .done(function (data) {
+                    isSleeping = data.data;
+                    Utils.updateToast('success', 'Tavern Status', 'You have successfully ' + (isSleeping === true ? 'entered' : 'left') + ' the tavern.');
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    let message = 'Couldn\'t update tavern status: <br>' + jqXHR.status + ' Error';
+    
+                    if ('responseJSON' in jqXHR) {
+                        if ('message' in jqXHR.responseJSON) {
+                            message += ' - ' + jqXHR.responseJSON.message;
+                        }
+                    }
+    
+                    Utils.updateToast('error', 'Error', message);
+                });
+        }
+        catch (error) {
+            $('#strategitica-tavern-change1').hide();
+            Utils.updateToast('error', 'Error', 'Couldn\'t update tavern status: <br>' + error.responseText);
+        }
+
+        this.isSleeping = isSleeping;
     }
 }
 
