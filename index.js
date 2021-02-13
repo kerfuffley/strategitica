@@ -1,6 +1,6 @@
 import * as Utils from './modules/utils.js';
 import { User } from './modules/user.js';
-import * as Task from './modules/task.js';
+import { Task } from './modules/task.js';
 
 $('#modal-login').modal('show');
 
@@ -514,7 +514,7 @@ function loadCalendar() {
     let datesWithTasksDue = {}; // [2]
 
     for (var i = 0; i < tasks.length; i++) { // [3]
-        var task = tasks[i];
+        var task = new Task(tasks[i], user);
 
         if (task.startDate != null || task.nextDue != null) {
             if (task.startDate != null) {
@@ -555,7 +555,7 @@ function loadCalendar() {
             }
 
             if (task.nextDue != null && task.nextDue.length > 0) {
-                if (!Task.isOneTimeDaily(task, user.tags)) {
+                if (!task.isOneTimeDaily()) {
                     task.nextDue.forEach(function (value) {
                         var startDate = new Date(task.startDate);
                         var currentDay = new Date(value);
@@ -636,11 +636,11 @@ function loadCalendar() {
             var otherTasks = []; // [5c]
 
             Object.keys(datesWithTasksDue[currentDayKey]).forEach(function (key) { // [2], [5]
-                var task = datesWithTasksDue[currentDayKey][key]; // [2]
+                var task = new Task(datesWithTasksDue[currentDayKey][key], user); // [2]
                 var timeOfDayTags = 0; // [5c]
-                var hasMorningTag = Task.hasTimeOfDayTag(task, 'morning', user.tags); // [5c]
-                var hasAfternoonTag = Task.hasTimeOfDayTag(task, 'afternoon', user.tags); // [5c]
-                var hasEveningTag = Task.hasTimeOfDayTag(task, 'evening', user.tags); // [5c]
+                var hasMorningTag = task.hasTimeOfDayTag('morning'); // [5c]
+                var hasAfternoonTag = task.hasTimeOfDayTag('afternoon'); // [5c]
+                var hasEveningTag = task.hasTimeOfDayTag('evening'); // [5c]
 
                 if (typeof task.priority === 'number') {
                     difficultyRating += task.priority; // [5b]
@@ -678,7 +678,7 @@ function loadCalendar() {
                 var timeOfDayDurationAsterisk = false;
 
                 morningTasks.forEach(function (value) {
-                    var taskDuration = Task.duration(value, user.tags);
+                    var taskDuration = value.duration();
                     dayDuration += taskDuration;
                     timeOfDayDuration += taskDuration;
                     if (taskDuration === 0) {
@@ -686,9 +686,9 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = Task.tooltipHtml(value); // [5d]
-                    var modalHtml = Task.modalHtml(value, user.tags); // [5d]
-                    badgesHtml += Task.badgeHtml(value, user.tags); // [5]
+                    var tooltipHtml = value.tooltipHtml(); // [5d]
+                    var modalHtml = value.modalHtml(); // [5d]
+                    badgesHtml += value.badgeHtml(); // [5]
 
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = tooltipHtml; // [5d]
@@ -708,7 +708,7 @@ function loadCalendar() {
                 var timeOfDayDurationAsterisk = false;
 
                 afternoonTasks.forEach(function (value) {
-                    var taskDuration = Task.duration(value, user.tags);
+                    var taskDuration = value.duration();
                     dayDuration += taskDuration;
                     timeOfDayDuration += taskDuration;
                     if (taskDuration === 0) {
@@ -716,9 +716,9 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = Task.tooltipHtml(value); // [5d]
-                    var modalHtml = Task.modalHtml(value, user.tags); // [5d]
-                    badgesHtml += Task.badgeHtml(value, user.tags); // [5]
+                    var tooltipHtml = value.tooltipHtml(); // [5d]
+                    var modalHtml = value.modalHtml(); // [5d]
+                    badgesHtml += value.badgeHtml(); // [5]
 
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = tooltipHtml; // [5d]
@@ -738,7 +738,7 @@ function loadCalendar() {
                 var timeOfDayDurationAsterisk = false;
 
                 eveningTasks.forEach(function (value) {
-                    var taskDuration = Task.duration(value, user.tags);
+                    var taskDuration = value.duration();
                     dayDuration += taskDuration;
                     timeOfDayDuration += taskDuration;
                     if (taskDuration === 0) {
@@ -746,9 +746,9 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = Task.tooltipHtml(value); // [5d]
-                    var modalHtml = Task.modalHtml(value, user.tags); // [5d]
-                    badgesHtml += Task.badgeHtml(value, user.tags); // [5]
+                    var tooltipHtml = value.tooltipHtml(); // [5d]
+                    var modalHtml = value.modalHtml(); // [5d]
+                    badgesHtml += value.badgeHtml(); // [5]
 
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = tooltipHtml; // [5d]
@@ -768,7 +768,7 @@ function loadCalendar() {
                 var timeOfDayDurationAsterisk = false;
 
                 otherTasks.forEach(function (value) {
-                    var taskDuration = Task.duration(value, user.tags);
+                    var taskDuration = value.duration();
                     dayDuration += taskDuration;
                     timeOfDayDuration += taskDuration;
                     if (taskDuration === 0) {
@@ -776,9 +776,9 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = Task.tooltipHtml(value); // [5d]
-                    var modalHtml = Task.modalHtml(value, user.tags); // [5d]
-                    badgesHtml += Task.badgeHtml(value, user.tags); // [5]
+                    var tooltipHtml = value.tooltipHtml(); // [5d]
+                    var modalHtml = value.modalHtml(); // [5d]
+                    badgesHtml += value.badgeHtml(); // [5]
 
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = tooltipHtml; // [5d]
@@ -830,7 +830,7 @@ function loadCalendar() {
         interactiveDescriptions += '<div id="task-' + key + '-modal">' + tasksModalText[key] + '</div>'; // [5d], [6]
     });
 
-    var newTask = {
+    var newTask = new Task({
         id: 'new',
         text: 'New Task',
         type: 'daily',
@@ -847,9 +847,9 @@ function loadCalendar() {
         },
         everyX: 1,
         tags: []
-    };
+    }, user);
 
-    interactiveDescriptions += '<div id="task-new-modal">' + Task.modalHtml(newTask, user.tags) + '</div>';
+    interactiveDescriptions += '<div id="task-new-modal">' + newTask.modalHtml() + '</div>';
 
     $('#strategitica-calendar').html(output); // [5], [7]
     $('#strategitica-descriptions').html(interactiveDescriptions); // [5d], [6], [7]
