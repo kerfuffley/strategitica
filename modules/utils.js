@@ -1,6 +1,6 @@
-const appClient = '88aa06bb-ec69-43d8-b58a-e6df4aa608ac-Strategitica';
+export const appClient = '88aa06bb-ec69-43d8-b58a-e6df4aa608ac-Strategitica';
 
-const monthNames = [
+export const monthNames = [
     ['January', 'Jan'],
     ['February', 'Feb'],
     ['March', 'Mar'],
@@ -15,7 +15,7 @@ const monthNames = [
     ['December', 'Dec']
 ];
 
-const frequencyPlurals = {
+export const frequencyPlurals = {
     'daily': 'day(s)',
     'weekly': 'week(s)',
     'monthly': 'month(s)',
@@ -23,13 +23,13 @@ const frequencyPlurals = {
 };
 
 // debulked onresize handler
-function onResize(c,t){onresize=function(){clearTimeout(t);t=setTimeout(c,100)};return c};
+export function onResize(c,t){onresize=function(){clearTimeout(t);t=setTimeout(c,100)};return c};
 
 /**
  * Gets a URL parameter by its name.
  * @param {string} name - The parameter name
  */
-function getUrlParameter(name) {
+export function getUrlParameter(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
     var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
     var results = regex.exec(location.search);
@@ -45,7 +45,7 @@ function getUrlParameter(name) {
  * @param {Date} date 
  * @returns {string} A readable version of a given date
  */
-function getDateKey(date) {
+export function getDateKey(date) {
     return date.getUTCFullYear() + '-' + (date.getUTCMonth() <= 8 ? '0' : '') + (date.getUTCMonth() + 1) + '-' + (date.getUTCDate() <= 9 ? '0' : '') + date.getUTCDate();
 }
 
@@ -55,7 +55,7 @@ function getDateKey(date) {
  * @param {number} number 
  * @returns {string} The ordinal
  */
-function getNumberOrdinal(number) {
+export function getNumberOrdinal(number) {
     var numberAsString = number.toString();
     var ordinal = '';
 
@@ -86,11 +86,11 @@ function getNumberOrdinal(number) {
  * @param {number} month - The month, e.g. 0 for January, 1 for February, etc.
  * @returns {number} The last day of the given month and year, e.g. 31
  */
-function getLastDayOfMonth(year, month) {
+export function getLastDayOfMonth(year, month) {
     return new Date(year, month + 1, 0).getDate();
 }
 
-function formatDuration(durationInMinutes) {
+export function formatDuration(durationInMinutes) {
     var durationFormatted = '';
 
     if (durationInMinutes >= 60) {
@@ -105,11 +105,9 @@ function formatDuration(durationInMinutes) {
     return durationFormatted;
 }
 
-function updateToast(type, title, body) {
+export function updateToast(type, title, body) {
     var el = $('#strategitica-toast-' + type);
     el.find('.toast-title-js').html(title);
     el.find('.toast-body-js').html(body);
     el.toast('show');
 }
-
-export { appClient, monthNames, frequencyPlurals, onResize, getUrlParameter, getDateKey, getNumberOrdinal, getLastDayOfMonth, formatDuration, updateToast };

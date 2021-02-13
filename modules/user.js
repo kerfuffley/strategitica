@@ -1,6 +1,11 @@
 import * as Utils from './utils.js';
 
-class User {
+export class User {
+    /**
+     * 
+     * @param {string} id - The user ID
+     * @param {string} token - The user's API token
+     */
     constructor(id, token) {
         this.id = id;
         this.token = token;
@@ -20,6 +25,8 @@ class User {
     }
 
     /**
+     * @see {@link https://habitica.com/apidoc/#api-Tag-GetTag|Tag - Get a tag}
+     * @see {@link https://habitica.com/apidoc/#api-Task-GetUserTasks|Task - Get a user's tasks}
      * @see {@link https://habitica.com/apidoc/#api-User-UserGet|User - Get the authenticated user's profile}
      */
     create() {
@@ -220,5 +227,3 @@ class User {
         this.isSleeping = isSleeping;
     }
 }
-
-export { User };

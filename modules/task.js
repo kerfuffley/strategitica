@@ -1,6 +1,10 @@
 import * as Utils from './utils.js';
 
-class Task {
+export class Task {
+    /**
+     * @param {Object} taskObject - The task object from Habitica's API
+     * @param {User} user - The user the task belongs to
+     */
     constructor(taskObject, user) {
         this.id = taskObject.id;
         this.user = user;
@@ -17,6 +21,7 @@ class Task {
         this.daysOfMonth = taskObject.daysOfMonth ? taskObject.daysOfMonth : null;
         this.weeksOfMonth = taskObject.weeksOfMonth ? taskObject.weeksOfMonth : null;
         this.startDate = taskObject.startDate ? taskObject.startDate : null;
+        this.completed = taskObject.completed ? taskObject.completed : null;
         this.isDue = taskObject.isDue ? taskObject.isDue : null;
         this.nextDue = taskObject.nextDue ? taskObject.nextDue : null;
         this.checklist = taskObject.checklist ? taskObject.checklist : [];
@@ -602,5 +607,3 @@ class Task {
         return tooltipHtml;
     }
 }
-
-export { Task };
