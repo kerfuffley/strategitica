@@ -4,8 +4,6 @@ import * as Task from './modules/task.js';
 
 $('#modal-login').modal('show');
 
-let appClient = Utils.appClient;
-
 let ID = Utils.getUrlParameter('id');
 let token = '';
 
@@ -107,7 +105,7 @@ function completeTask(button) {
             contentType: 'application/json',
             cache: false,
             beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-client', appClient);
+                xhr.setRequestHeader('x-client', Utils.appClient);
                 xhr.setRequestHeader('x-api-user', ID);
                 xhr.setRequestHeader('x-api-key', token);
             }
@@ -294,7 +292,7 @@ function saveTask(button) {
                 contentType: 'application/json',
                 cache: false,
                 beforeSend: function (xhr) {
-                    xhr.setRequestHeader('x-client', appClient);
+                    xhr.setRequestHeader('x-client', Utils.appClient);
                     xhr.setRequestHeader('x-api-user', ID);
                     xhr.setRequestHeader('x-api-key', token);
                 }
@@ -347,7 +345,7 @@ function deleteTask(button) {
                 dataType: 'json',
                 contentType: 'application/json',
                 beforeSend: function (xhr) {
-                    xhr.setRequestHeader('x-client', appClient);
+                    xhr.setRequestHeader('x-client', Utils.appClient);
                     xhr.setRequestHeader('x-api-user', ID);
                     xhr.setRequestHeader('x-api-key', token);
                 }
@@ -402,7 +400,7 @@ function scoreChecklistItem(checkbox) {
             dataType: 'json',
             contentType: 'application/json',
             beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-client', appClient);
+                xhr.setRequestHeader('x-client', Utils.appClient);
                 xhr.setRequestHeader('x-api-user', ID);
                 xhr.setRequestHeader('x-api-key', token);
             }
