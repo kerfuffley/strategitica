@@ -93,12 +93,11 @@ class Task {
 
     /**
      * Check if a given task has a certain task indicating its duration, and
-     * returns that duration as a number of minutes. Tags intended for use as task
-     * durations must end in the format "##:##" or "#:##" for this to work. If a
-     * task doesn't have a duration tag, or if it has more than one duration tag,
-     * or if a number can't be determined from the tag, 0 is returned. 
-     * @param {Object} task - The task to check
-     * @param {Object} userTagNames - Key/value pairs for a user's tags
+     * returns that duration as a number of minutes. Tags intended for use as
+     * task durations must end in the format "##:##" or "#:##" for this to
+     * work. If a task doesn't have a duration tag, or if it has more than one
+     * duration tag, or if a number can't be determined from the tag, 0 is
+     * returned. 
      * @returns {number} The task duration in minutes
      */
     duration() {
@@ -141,17 +140,17 @@ class Task {
      * Gathers info about a given task's frequency, including:
      * 1.   Whether it repeats daily, weekly, etc.
      * 2.   Which days of the week it repeats on, if applicable
-     * 3.   Which days of the month it repeats on, if applicable (e.g. the 5th, the
-     *      12th, etc.)
+     * 3.   Which days of the month it repeats on, if applicable (e.g. the 5th,
+     *      the 12th, etc.)
      * 4.   Which weeks of the month it repeats on, if applicable. Note that
-     *      Habitica seems to think that days 1-7 of the month are always the first
-     *      week, and days 8-14 are always the second week, and so on. It's the
-     *      wrong way of determining the week number but I don't set tasks to
-     *      repeat based on the week of the month, so I personally don't care.
-     * It takes all this into account and outputs the frequency in a summed-up way,
-     * e.g. "Every other month", "Every Tuesday", "Every month on the 15th", etc.
-     * It uses {@link Utils.getNumberOrdinal} to do some of this.
-     * @param {Object} task 
+     *      Habitica seems to think that days 1-7 of the month are always the
+     *      first week, and days 8-14 are always the second week, and so on.
+     *      It's the wrong way of determining the week number but I don't set
+     *      tasks to repeat based on the week of the month, so I personally
+     *      don't care.
+     * It takes all this into account and outputs the frequency in a summed-up
+     * way, e.g. "Every other month", "Every Tuesday", "Every month on the
+     * 15th", etc. It uses {@link Utils.getNumberOrdinal} to do some of this.
      * @returns {string} The task frequency, summed up
      */
     frequencyFormatted() {
@@ -318,8 +317,7 @@ class Task {
     }
 
     /**
-     * Gets the HTML for a given task to put in the calendar as a Bootstrap badge.
-     * @param {Object} task 
+     * Gets the HTML for this task to put in the calendar as a Bootstrap badge.
      * @returns {string} The task's badge HTML
      */
     badgeHtml() {
@@ -381,8 +379,7 @@ class Task {
     }
 
     /**
-     * Gets the HTML that'll go into a modal for a given task.
-     * @param {Object} task 
+     * Gets the HTML that'll go into a modal for this task.
      * @returns {string} The modal inner HTML
      */
     modalHtml() {
@@ -573,8 +570,7 @@ class Task {
     }
 
     /**
-     * Gets the HTML that'll go into a tooltip for a given task.
-     * @param {Object} task 
+     * Gets the HTML that'll go into a tooltip for this task.
      * @returns {string} The tooltip inner HTML
      */
     tooltipHtml() {
