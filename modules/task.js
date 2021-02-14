@@ -26,6 +26,27 @@ export class Task {
         this.nextDue = taskObject.nextDue ? taskObject.nextDue : null;
         this.checklist = taskObject.checklist ? taskObject.checklist : [];
         this.value = taskObject.value ? taskObject.value : 0;
+        this.timeOfDay = 'whenever';
+    }
+
+    create() {
+        var timeOfDayTagCount = 0;
+        if (this.hasTimeOfDayTag('morning')) {
+            timeOfDayTagCount++;
+            this.timeOfDay = 'morning';
+        }
+        if (this.hasTimeOfDayTag('afternoon')) {
+            timeOfDayTagCount++;
+            this.timeOfDay = 'afternoon';
+        }
+        if (this.hasTimeOfDayTag('evening')) {
+            timeOfDayTagCount++;
+            this.timeOfDay = 'evening';
+        }
+
+        if (timeOfDayTagCount > 1) {
+            this.timeOfDay = 'whenever';
+        }
     }
 
     /**

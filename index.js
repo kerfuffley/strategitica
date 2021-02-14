@@ -96,11 +96,7 @@ function loadUserStats() {
  *          labels can get added at the start of each new month.
  *      b.  Start adding up the difficulty of each task to come up with a
  *          difficulty rating for the day.
- *      c.  Determine if each task has a tag for a certain time of day:
- *          morning, afternoon and evening. If a task has exactly one of those
- *          tags, we'll put it into an array for that time of day; if it has
- *          none of those tags or two or more of those tags, we'll put it in a
- *          "whenever" array. This way, we can sort tasks by time of day.
+ *      c.  Put each task into an array based on which time of day it is.
  *      d.  Generate some tooltip and modal HTML associated with each task (see
  *          {@link Task.tooltipHtml} and {@link Task.modalHtml}) and add that
  *          HTML string to two respective arrays. We'll be dealing with that
@@ -146,6 +142,7 @@ function loadCalendar() {
 
     for (var i = 0; i < tasks.length; i++) { // [3]
         var task = new Task(tasks[i], user);
+        task.create();
 
         if (task.startDate != null || task.nextDue != null) {
             if (task.startDate != null) {
@@ -268,35 +265,20 @@ function loadCalendar() {
 
             Object.keys(datesWithTasksDue[currentDayKey]).forEach(function (key) { // [2], [5]
                 var task = new Task(datesWithTasksDue[currentDayKey][key], user); // [2]
-                var timeOfDayTags = 0; // [5c]
-                var hasMorningTag = task.hasTimeOfDayTag('morning'); // [5c]
-                var hasAfternoonTag = task.hasTimeOfDayTag('afternoon'); // [5c]
-                var hasEveningTag = task.hasTimeOfDayTag('evening'); // [5c]
+                task.create();
 
                 if (typeof task.priority === 'number') {
                     difficultyRating += task.priority; // [5b]
                 }
 
-                if (hasMorningTag) {
-                    timeOfDayTags++; // [5c]
+                if (task.timeOfDay === 'morning') {
+                    morningTasks.push(task); // [5c]
                 }
-                if (hasAfternoonTag) {
-                    timeOfDayTags++; // [5c]
+                else if (task.timeOfDay === 'afternoon') {
+                    afternoonTasks.push(task); // [5c]
                 }
-                if (hasEveningTag) {
-                    timeOfDayTags++; // [5c]
-                }
-
-                if (timeOfDayTags === 1) { // [5c]
-                    if (hasMorningTag) {
-                        morningTasks.push(task); // [5c]
-                    }
-                    if (hasAfternoonTag) {
-                        afternoonTasks.push(task); // [5c]
-                    }
-                    if (hasEveningTag) {
-                        eveningTasks.push(task); // [5c]
-                    }
+                else if (task.timeOfDay === 'evening') {
+                    eveningTasks.push(task); // [5c]
                 }
                 else {
                     otherTasks.push(task); // [5c]
@@ -479,6 +461,7 @@ function loadCalendar() {
         everyX: 1,
         tags: []
     }, user);
+    newTask.create();
 
     interactiveDescriptions += '<div id="task-new-modal">' + newTask.modalHtml() + '</div>';
 
