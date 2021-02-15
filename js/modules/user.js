@@ -123,6 +123,8 @@ export class User {
 
         this.tasks = userTasks;
 
+        //console.log(userTasks);
+
         let userInfo = null;
         userInfo = function () {
             var info = null;

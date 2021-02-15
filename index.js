@@ -1,7 +1,7 @@
-import * as Utils from './modules/utils.js';
-import { User } from './modules/user.js';
-import { Task } from './modules/task.js';
-import * as TaskActions from './modules/taskActions.js';
+import * as Utils from './js/modules/utils.js';
+import { User } from './js/modules/user.js';
+import { Task } from './js/modules/task.js';
+import * as TaskActions from './js/modules/taskActions.js';
 
 $('#modal-login').modal('show');
 
@@ -14,7 +14,7 @@ if (ID != '') {
 
 let user = null;
 
-$('#strategitica-login').submit(function(event){
+$('#strategitica-login').submit(function (event) {
     event.preventDefault();
 
     ID = $('#user-id').val();
@@ -71,14 +71,9 @@ function loadUserStats() {
  *      array "tier" will be a task ID. It's important for the task ID to be
  *      there because we'll use it later on to ensure a task doesn't appear
  *      twice in the same day (don't ask me how or why this happens, I just
- *      know that it does).
- * 3.   Go through each task and determine if it should be in the calendar. It
- *      shouldn't be included if its due date is too far in the future, or if
- *      its due date is today but it's been completed. If its due date is in
- *      the past, we can include it--we'll just consider its due date to be
- *      today so that those tasks can still be completed, albeit a bit late. If
- *      the task should be included, add it to the array for its due date. This
- *      is done for each task's future due dates as well.
+ *      know that it can).
+ * 3.   Go through each task's list of dates, if they have one, and add it to
+ *      the array for each of its dates.
  * 4.   Start coming up with the calendar HTML. Regardless of what day it is
  *      today, we need to start off the calendar with the current month,
  *      including past days up to yesterday, because a calendar that begins
@@ -122,13 +117,12 @@ function loadCalendar() {
     let output = '';
 
     let today = new Date(); // [1]
+    today.setHours(0, 0, 0, 0);
     let thisMonth = today.getMonth(); // [1]
     let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [1]
     let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
 
     let calendarDaysLimit = 186; // [1]
-    let today2 = new Date();
-    let calendarLastDay = new Date(today2.setDate(today2.getDate() + calendarDaysLimit)); // [1]
     let weekDayNames = [ // [1]
         ['Sunday', 'Sun'],
         ['Monday', 'Mon'],
@@ -144,67 +138,17 @@ function loadCalendar() {
         var task = new Task(tasks[i], user);
         task.create();
 
-        if (task.startDate != null || task.nextDue != null) {
-            if (task.startDate != null) {
-                var startDate = new Date(task.startDate);
+        var taskDates = task.dates(calendarDaysLimit); // [3]
 
-                if (startDate < today) { // [3]
-                    if (task.isDue != null && task.isDue === true) {
-                        startDate = today; // [3]
-                    }
-                    else {
-                        startDate = null;
-                    }
+        if (taskDates.length > 0) { // [3]
+            for (var j = 0; j < taskDates.length; j++) {
+                var date = taskDates[j];
+                if (!(date in datesWithTasksDue)) {
+                    datesWithTasksDue[date] = []; // [2]
                 }
 
-                if (startDate != null) {
-                    var shouldAddTask = true;
-
-                    if (startDate > calendarLastDay) { // [3]
-                        shouldAddTask = false;
-                    }
-
-                    if (startDate.setHours(0, 0, 0, 0) === today.setHours(0, 0, 0, 0) && task.completed === true) { // [3]
-                        shouldAddTask = false;
-                    }
-
-                    if (shouldAddTask) {
-                        var startDateKey = Utils.getDateKey(startDate); // [2]
-
-                        if (!(startDateKey in datesWithTasksDue)) {
-                            datesWithTasksDue[startDateKey] = []; // [2]
-                        }
-
-                        if (!(task.id in datesWithTasksDue[startDateKey])) {
-                            datesWithTasksDue[startDateKey][task.id] = task; // [2], [3]
-                        }
-                    }
-                }
-            }
-
-            if (task.nextDue != null && task.nextDue.length > 0) {
-                if (!task.isOneTimeDaily()) {
-                    task.nextDue.forEach(function (value) {
-                        var startDate = new Date(task.startDate);
-                        var currentDay = new Date(value);
-                        var currentDayKey = Utils.getDateKey(currentDay); // [2]
-
-                        var shouldAddTask = true;
-
-                        if (currentDay > calendarLastDay) { // [3]
-                            shouldAddTask = false;
-                        }
-
-                        if (shouldAddTask) {
-                            if (!(currentDayKey in datesWithTasksDue)) {
-                                datesWithTasksDue[currentDayKey] = []; // [2]
-                            }
-
-                            if (!(task.id in datesWithTasksDue[currentDayKey])) {
-                                datesWithTasksDue[currentDayKey][task.id] = task; // [2], [3]
-                            }
-                        }
-                    });
+                if (datesWithTasksDue[date].indexOf(task.id) === -1) {
+                    datesWithTasksDue[date][task.id] = task; // [2], [3]
                 }
             }
         }
@@ -244,6 +188,7 @@ function loadCalendar() {
     for (var i = today.getDate(); i <= calendarDaysLimit; i++) { // [5]
         var currentDay = new Date(today);
         currentDay.setDate(currentDay.getDate() + dayCounter);
+        currentDay.setHours(0, 0, 0, 0);
 
         if (currentDay.getMonth() != thisMonth) { // [5a]
             output += '<div class="calendar-label-month">' + Utils.monthNames[currentDay.getMonth()][0] + ' ' + currentDay.getFullYear() + '</div>' + weekLabels; // [5a]
@@ -264,8 +209,7 @@ function loadCalendar() {
             var otherTasks = []; // [5c]
 
             Object.keys(datesWithTasksDue[currentDayKey]).forEach(function (key) { // [2], [5]
-                var task = new Task(datesWithTasksDue[currentDayKey][key], user); // [2]
-                task.create();
+                var task = datesWithTasksDue[currentDayKey][key]; // [2]
 
                 if (typeof task.priority === 'number') {
                     difficultyRating += task.priority; // [5b]
@@ -414,17 +358,17 @@ function loadCalendar() {
             output += '<div class="calendar-week">';
         }
 
-        output += '<div class="calendar-day' + (dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '') + '">' + 
-        '<div class="p-1">' + 
-        '<span class="calendar-label-day">' + 
-        '<span class="d-md-none">' + weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1] + '</span> ' + 
-        currentDay.getDate() +  
-        //' <span class="badge badge-pill badge-light float-right" title="Difficulty rating"><i class="fas fa-star" aria-hidden="true"></i>' + (difficultyRating % 1 === 0 ? difficultyRating : difficultyRating.toFixed(1)) + '</span>' + 
-        ' <span class="badge badge-pill badge-light float-right" title="Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : '') + '</span>' + 
-        '</span>' + 
-        dayTasks + 
-        '</div>' + 
-        '</div>'; // [5]
+        output += '<div class="calendar-day' + (dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '') + '">' +
+            '<div class="p-1">' +
+            '<span class="calendar-label-day">' +
+            '<span class="d-md-none">' + weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1] + '</span> ' +
+            currentDay.getDate() +
+            //' <span class="badge badge-pill badge-light float-right" title="Difficulty rating"><i class="fas fa-star" aria-hidden="true"></i>' + (difficultyRating % 1 === 0 ? difficultyRating : difficultyRating.toFixed(1)) + '</span>' + 
+            ' <span class="badge badge-pill badge-light float-right" title="Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : '') + '</span>' +
+            '</span>' +
+            dayTasks +
+            '</div>' +
+            '</div>'; // [5]
 
         if (currentDay.getDay() === 6 || currentDay.getDate() === Utils.getLastDayOfMonth(currentDay.getFullYear(), currentDay.getMonth()) || dayCounter === calendarDaysLimit) { // [5a]
             output += '</div><!-- end .calendar-week -->';
@@ -495,7 +439,7 @@ function loadTavernStatus() {
     $('#strategitica-tavern-change1').html(tavernChangeHtml);
 
     if (user.isSleeping === true) {
-        $('#strategitica-tavern-change2').on('click', function() {
+        $('#strategitica-tavern-change2').on('click', function () {
             user.changeTavernStatus();
             loadTavernStatus();
         });
@@ -514,10 +458,10 @@ function updateHeaderSpacing() {
 
 $('body').popover({
     selector: '.badge-task-js',
-    html: true, 
+    html: true,
     trigger: 'hover',
     placement: 'auto',
-    content: function() { 
+    content: function () {
         return $('#task-' + $(this).data('taskid') + '-tooltip').html()
     }
 });
@@ -546,11 +490,11 @@ $('#strategitica-add-daily').on('click', function (e) {
     $('#modal-task').modal('show');
 });
 
-$('#strategitica-refresh').on('click', function() {
+$('#strategitica-refresh').on('click', function () {
     loadAll(true);
 });
 
-$('#strategitica-tavern-change1').on('click', function() {
+$('#strategitica-tavern-change1').on('click', function () {
     user.changeTavernStatus();
     loadTavernStatus();
 });
@@ -560,13 +504,13 @@ $('#strategitica-tavern-change1').on('click', function() {
 
 $('#modal-task').on('show.bs.modal', function (e) {
     // Let's avoid duplicate IDs, please...
-    $(this).find('[id]').each(function() {
+    $(this).find('[id]').each(function () {
         var itemId = $(this).attr('id');
         $(this).attr('id', itemId + '-modal');
     });
 
     // Gotta change the labels to match the new IDs too
-    $(this).find('[for]').each(function() {
+    $(this).find('[for]').each(function () {
         var itemFor = $(this).attr('for');
         $(this).attr('for', itemFor + '-modal');
     });
@@ -585,35 +529,35 @@ $('#modal-task').on('show.bs.modal', function (e) {
 
 // --- Start task change handlers ---
 
-$(document).on('change', '.task-checklist-item-js', function(e) {
+$(document).on('change', '.task-checklist-item-js', function (e) {
     TaskActions.scoreChecklistItem($(this), user);
     loadAll(false);
 });
 
-$(document).on('click', '.btn-task-complete-js', function(e) {
+$(document).on('click', '.btn-task-complete-js', function (e) {
     TaskActions.complete($(this).data('taskid'), $(this).data('tasktitle'), user);
     loadAll(false);
 });;
 
-$(document).on('click', '.btn-task-edit-js', function(e) {
+$(document).on('click', '.btn-task-edit-js', function (e) {
     TaskActions.edit();
 });
 
-$(document).on('click', '.btn-task-edit-cancel-js', function(e) {
+$(document).on('click', '.btn-task-edit-cancel-js', function (e) {
     TaskActions.editCancel();
 });
 
-$(document).on('click', '.btn-task-delete-js', function(e) {
+$(document).on('click', '.btn-task-delete-js', function (e) {
     TaskActions.remove($(this).data('taskid'), $(this).data('tasktitle'), user);
     loadAll(false);
 });
 
-$(document).on('click', '.btn-task-save-js', function(e) {
+$(document).on('click', '.btn-task-save-js', function (e) {
     TaskActions.save($(this).data('taskid'), user);
     loadAll(false);
 });
 
-$(document).on('change', '#modal-task [name="task-frequency"]', function() {
+$(document).on('change', '#modal-task [name="task-frequency"]', function () {
     var taskRepeatContainer = $('#modal-task .task-param-repeat-js');
     var taskDaysWeeksOfMonthContainer = $('#modal-task .task-param-daysweeksofmonth-js');
     var taskEveryXAddon = $('#modal-task .task-everyx-addon-js');
@@ -641,7 +585,7 @@ $(document).on('change', '#modal-task [name="task-frequency"]', function() {
     taskEveryXAddon.html(Utils.frequencyPlurals[$(this).val()]);
 });
 
-$(document).on('change', '#modal-task [name="task-everyx"]', function() {
+$(document).on('change', '#modal-task [name="task-everyx"]', function () {
     var everyXValue = $(this).val();
 
     if (parseInt(everyXValue) <= 0 || Number.isNaN(parseInt(everyXValue))) {

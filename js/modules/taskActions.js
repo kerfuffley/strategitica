@@ -152,7 +152,6 @@ export function save(taskId, user) {
         var taskParameters = {
             'text': taskText, // task title; required
             'notes': taskNotes,
-            //'date': '', // only valid for todo's; string
             'priority': taskDifficulty,
             //'reminders': '', // will add this later
             //'streak: '', // will add this later
@@ -233,6 +232,10 @@ export function save(taskId, user) {
             }
             
             taskParameters['weeksOfMonth'] = taskWeeksOfMonth;
+        }
+        else if (taskType === 'todo'){
+            var taskDate = new Date($('#task-' + taskId + '-date-modal').val() + 'T00:00:00');
+            taskParameters['date'] = taskDate;
         }
 
         var taskTags = [];
