@@ -1,7 +1,7 @@
 {
     "type": "module",
     "name": "strategitica",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "description": "Displays Habitica tasks in calendar format, along with some other helpful info and a sleep toggle.",
     "main": "index.js",
     "scripts": {
