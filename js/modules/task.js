@@ -1,4 +1,5 @@
 import * as Utils from './utils.js';
+// import { RRule, RRuleSet, rrulestr } from '../rrule.js';
 
 export class Task {
     /**
@@ -343,6 +344,291 @@ export class Task {
     }
 
     /**
+     * Dailies have a startDate, and todo's have a date (i.e. due date), but
+     * often these dates don't work for a calendar because they're in the past,
+     * or that task was due today but is now completed, etc. This function gets
+     * the first date that a task should appear on the calendar.
+     * 
+     * 1.   If it's a daily, we'll see if we can use startDate first.
+     * 2.   If startDate is in the past...
+     *      a.  If the task is marked as "due", since startDate is in the past,
+     *          that means it's past due, so we'll set firstDate to today.
+     *      b.  If it's not marked as "due", then this date in the past is no
+     *          good. We'll set firstDate to null and hopefully we can find a
+     *          better date with nextDue.
+     * 3.   If firstDate isn't null at this point, and if firstDate is today
+     *      and this task is marked completed (which means it's completed for
+     *      today, but not for future dates), then this task shouldn't show up
+     *      for this date either. Hopefully we can find a better date with
+     *      nextDue.
+     * 4.   Now we're done looking at startDate. If firstDate ended up being
+     *      null, and nextDue isn't empty...
+     *      a.  Loop through nextDue to find the earliest date.
+     *      b.  Set firstDate to the earliest date found.
+     * 5.   If it's a todo, we'll see if we can use date.
+     * 6.   If date is in the past, we'll just set firstDate to today.
+     *      Apparently todo's don't get marked with isDue like dailies do, so
+     *      there's not really any discerning from due/not due todo's.
+     * 7.   Same as [3], except we won't have dates to look at with nextDue
+     *      since that doesn't apply to todo's. I'm not sure if this scenario
+     *      would ever happen since I would think a todo that's complete just
+     *      doesn't exist anymore. We'll keep this logic here just in case.
+     * @returns {Date|null} The first date this task should show up on the calendar, or null if no applicable date is found
+     */
+    firstCalendarDate() {
+        var firstDate = null;
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var isDue = this.isDue;
+        var completed = this.completed;
+
+        var message = '';
+
+        if (this.type === 'daily') { // [1]
+            message += 'firstCalendarDate() for ' + this.text;
+            if (this.startDate !== null) { // [1]
+                firstDate = new Date(this.startDate);
+                firstDate.setHours(0, 0, 0, 0);
+                message += '\n\tstartDate found: ' + firstDate;
+
+                if (firstDate < today) { // [2]
+                    message += '\n\tdate in past';
+                    if (isDue !== null && isDue === true) { // [2a]
+                        message += ', and it is due, so set to today';
+                        firstDate = today; // [2a]
+                    }
+                    else { // [2b]
+                        message += ', and not due, so set to null';
+                        firstDate = null; // [2b]
+                    }
+                }
+
+                if (firstDate !== null) { // [3]
+                    message += '\n\tnot null at this point';
+                    if (Utils.getDateKey(firstDate) === Utils.getDateKey(today) && completed !== null && completed === true) { // [3]
+                        message += '\n\tdue today and completed, so set to null';
+                        firstDate = null; // [3]
+                    }
+                }
+            }
+
+            if (firstDate === null && this.nextDue !== null && this.nextDue.length > 0) { // [4]
+                var nextDue = this.nextDue;
+                var earliestNextDue = null; // [4a]
+
+                for (var i = 0; i < nextDue.length; i++) { // [4a]
+                    var thisDate = new Date(nextDue[i]);
+
+                    if (earliestNextDue === null || (earliestNextDue !== null && thisDate < earliestNextDue)) { // [4a]
+                        earliestNextDue = thisDate; // [4a]
+                    }
+                }
+
+                firstDate = earliestNextDue; // [4b]
+                firstDate.setHours(0, 0, 0, 0);
+
+                message += '\n\tdate found from nextDue: ' + firstDate;
+            }
+        }
+        else if (this.type === 'todo') { // [5]
+            if (this.date !== null) { // [5]
+                firstDate = new Date(this.date);
+                firstDate.setHours(0, 0, 0, 0);
+
+                if (firstDate < today) { // [6]
+                    firstDate = today;  // [6]
+                }
+
+                if (firstDate !== null) { // [7]
+                    if (Utils.getDateKey(firstDate) === Utils.getDateKey(today) && completed !== null && completed === true) { // [7]
+                        firstDate = null; // [7]
+                    }
+                }
+            }
+        }
+
+        return firstDate;
+    }
+
+    /**
+     * Gets a list of dates to show a task for in the calendar.
+     * 
+     * 1.   Get the earliest date to look at with {@link firstCalendarDate}
+     * 2.   Get the latest date to look at with today and daysLimit
+     * 3.   If [1] was found and it's before [2]...
+     * 4.   Add [1] to the list of dates, but in the nice format of
+     *      {@link Utils.getDateKey}, since that's the format the calendar will
+     *      be using
+     * 5.   If this task is a daily and it's not a one-time daily, then we can
+     *      look at other dates for this task. Todo's aren't recurring tasks,
+     *      so dailies are the only type of task this should apply to. And
+     *      one-time dailies should only appear once on the calendar, even
+     *      though Habitica sees more dates for them.
+     * 6.   Now, we're basically setting up some other params that we'll pass
+     *      to rrule.js soon. These include (but are not limited to):
+     *      a.  The task frequency (either daily, weekly, monthly or yearly)
+     *      b.  The day of the month the task should recur on. Only applicable
+     *          for monthly tasks where this option is selected.
+     *      c.  The week of the month the task should recur on. Only applicable
+     *          for monthly tasks where this option is selected.
+     *      d.  The days of the week that this task repeats on. This only
+     *          applies to weekly tasks, or monthly tasks where [6c] applies.
+     *      e.  The interval of each frequency iteration. For example:
+     *          - 2 if a task is due every 2 weeks
+     *          - 3 if a task is due every 3 days
+     *          - 1 if a task is due every month
+     *          - 5 if a task is due every 5 days
+     * 7.   We can finally use the params we set up in [6] and pass them to
+     *      rrule.
+     *      a.  This is the day weeks should start on. I just wanted to make a
+     *          note here that in the mobile app, you can pick what day the
+     *          week starts on. I assume Habitica uses this to determine when
+     *          recurring tasks should be due when they're based on the day of
+     *          the week. However, I can't find where this is stored in the API
+     *          (if it's stored there at all). So, it's set to Sunday here--I
+     *          hope that's the most common date people have it set to.
+     *          Otherwise, I think a lot of dailies based on day of the week
+     *          could be off. I'll have to ask around about this.
+     * 8.   Now we have those future dates, let's add them to the list, making
+     *      sure not to add any duplicate dates. And, just like with [4],
+     *      they'll be formatted nicely.
+     * @param {number} daysLimit - How far in the future to look as a number of days
+     * @returns {Array.<string>} The task's calendar days
+     */
+    dates(daysLimit) {
+        var dates = [];
+        var startDate = this.firstCalendarDate(); // [1]
+
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        var endDate = new Date();
+        endDate.setDate(today.getDate() + daysLimit); // [2]
+        endDate.setHours(0, 0, 0, 0);
+
+        if (startDate !== null && startDate <= endDate) { // [3]
+            dates.push(Utils.getDateKey(startDate)); // [4]
+    
+            if (this.type === 'daily' && !this.isOneTimeDaily()) { // [5]
+                var frequency = this.frequency;
+                var repeat = this.repeat;
+                var daysOfMonth = this.daysOfMonth;
+                var weeksOfMonth = this.weeksOfMonth;
+
+                var freq = null; // [6a]
+                var bymonthday = []; // [6b]
+                var bysetpos = []; // [6c]
+                var byweekday = []; // [6d]
+                var interval = this.everyX; // [6e]
+
+                if (frequency === 'daily') {
+                    freq = rrule.RRule.DAILY; // [6a]
+                }
+                else if (frequency === 'weekly') {
+                    freq = rrule.RRule.WEEKLY; // [6a]
+                }
+                else if (frequency === 'monthly') {
+                    freq = rrule.RRule.MONTHLY; // [6a]
+
+                    if (daysOfMonth && daysOfMonth.length > 0) {
+                        for (var i = 0; i < daysOfMonth.length; i++) {
+                            bymonthday.push(daysOfMonth[i] === 31 ? -1 : daysOfMonth[i]); // [6b]
+                        }
+                    }
+                    if (weeksOfMonth && weeksOfMonth.length > 0) {
+                        for (var i = 0; i < weeksOfMonth.length; i++) {
+                            bysetpos.push(weeksOfMonth[i] + 1); // [6c]
+                        }
+                    }
+                }
+                else if (frequency === 'yearly') {
+                    freq = rrule.RRule.YEARLY; // [6a]
+                }
+
+                if (frequency === 'weekly' || (frequency === 'monthly' && weeksOfMonth && weeksOfMonth.length > 0)) {
+                    if (repeat.su === true) {
+                        byweekday.push(rrule.RRule.SU); // [6d]
+                    }
+                    if (repeat.m === true) {
+                        byweekday.push(rrule.RRule.MO); // [6d]
+                    }
+                    if (repeat.t === true) {
+                        byweekday.push(rrule.RRule.TU); // [6d]
+                    }
+                    if (repeat.w === true) {
+                        byweekday.push(rrule.RRule.WE); // [6d]
+                    }
+                    if (repeat.th === true) {
+                        byweekday.push(rrule.RRule.TH); // [6d]
+                    }
+                    if (repeat.f === true) {
+                        byweekday.push(rrule.RRule.FR); // [6d]
+                    }
+                    if (repeat.s === true) {
+                        byweekday.push(rrule.RRule.SA); // [6d]
+                    }
+                }
+    
+                var rule = null;
+    
+                if (byweekday.length > 0) {
+                    if (bysetpos.length > 0) {
+                        rule = new rrule.RRule({ // [7]
+                            freq: freq, // [6a]
+                            dtstart: startDate,
+                            until: endDate,
+                            interval: interval, // [6e]
+                            wkst: rrule.SU, // [7a]
+                            byweekday: byweekday, // [6d]
+                            bysetpos: bysetpos // [6c]
+                        }).all();
+                    }
+                    else {
+                        rule = new rrule.RRule({ // [7]
+                            freq: freq, // [6a]
+                            dtstart: startDate,
+                            until: endDate,
+                            interval: interval, // [6e]
+                            wkst: rrule.SU, // [7a]
+                            byweekday: byweekday // [6d]
+                        }).all();
+                    }
+                }
+                else if (bymonthday.length > 0) {
+                    rule = new rrule.RRule({ // [7]
+                        freq: freq, // [6a]
+                        dtstart: startDate,
+                        until: endDate,
+                        interval: interval, // [6e]
+                        wkst: rrule.SU, // [7a]
+                        bymonthday: bymonthday // [6b]
+                    }).all();
+                }
+                else {
+                    rule = new rrule.RRule({ // [7]
+                        freq: freq, // [6a]
+                        dtstart: startDate,
+                        until: endDate,
+                        interval: interval, // [6e]
+                        wkst: rrule.SU // [7a]
+                    }).all();
+                }
+    
+                if (rule !== null && rule.length > 0) {
+                    for (var i = 0; i < rule.length; i++) {
+                        var thisDate = Utils.getDateKey(rule[i]);
+                        if (dates.indexOf(thisDate) === -1) { // [8]
+                            dates.push(thisDate); // [8]
+                        }
+                    }
+                }
+            }
+        }
+
+        return dates;
+    }
+
+    /**
      * Gets the HTML for this task to put in the calendar as a Bootstrap badge.
      * @returns {string} The task's badge HTML
      */
@@ -500,6 +786,10 @@ export class Task {
         // Start date (dailies only)
         if (task.type === 'daily') {
             bodyHtmlEditable += '<div class="form-group task-param-editable-js d-none"><label for="task-' + task.id + '-startdate">Start date</label><input type="date" class="form-control form-control-sm" id="task-' + task.id + '-startdate" value="' + (task.startDate ? Utils.getDateKey(new Date(task.startDate)) : Utils.getDateKey(new Date())) + '"></input></div>';
+        }
+        // Due date (todo's only)
+        else if (task.type === 'todo') {
+            bodyHtmlEditable += '<div class="form-group task-param-editable-js d-none"><label for="task-' + task.id + '-date">Due date</label><input type="date" class="form-control form-control-sm" id="task-' + task.id + '-date" value="' + (task.date ? Utils.getDateKey(new Date(task.date)) : Utils.getDateKey(new Date())) + '"></input></div>';
         }
 
         // Frequency (dailies only)
