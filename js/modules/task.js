@@ -480,15 +480,6 @@ export class Task {
      *          - 5 if a task is due every 5 days
      * 7.   We can finally use the params we set up in [6] and pass them to
      *      rrule.
-     *      a.  This is the day weeks should start on. I just wanted to make a
-     *          note here that in the mobile app, you can pick what day the
-     *          week starts on. I assume Habitica uses this to determine when
-     *          recurring tasks should be due when they're based on the day of
-     *          the week. However, I can't find where this is stored in the API
-     *          (if it's stored there at all). So, it's set to Sunday here--I
-     *          hope that's the most common date people have it set to.
-     *          Otherwise, I think a lot of dailies based on day of the week
-     *          could be off. I'll have to ask around about this.
      * 8.   Now we have those future dates, let's add them to the list, making
      *      sure not to add any duplicate dates. And, just like with [4],
      *      they'll be formatted nicely.
@@ -578,7 +569,7 @@ export class Task {
                             dtstart: startDate,
                             until: endDate,
                             interval: interval, // [6e]
-                            wkst: rrule.SU, // [7a]
+                            wkst: rrule.SU,
                             byweekday: byweekday, // [6d]
                             bysetpos: bysetpos // [6c]
                         }).all();
@@ -589,7 +580,7 @@ export class Task {
                             dtstart: startDate,
                             until: endDate,
                             interval: interval, // [6e]
-                            wkst: rrule.SU, // [7a]
+                            wkst: rrule.SU,
                             byweekday: byweekday // [6d]
                         }).all();
                     }
@@ -600,7 +591,7 @@ export class Task {
                         dtstart: startDate,
                         until: endDate,
                         interval: interval, // [6e]
-                        wkst: rrule.SU, // [7a]
+                        wkst: rrule.SU,
                         bymonthday: bymonthday // [6b]
                     }).all();
                 }
@@ -610,7 +601,7 @@ export class Task {
                         dtstart: startDate,
                         until: endDate,
                         interval: interval, // [6e]
-                        wkst: rrule.SU // [7a]
+                        wkst: rrule.SU
                     }).all();
                 }
     
