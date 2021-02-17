@@ -54,7 +54,7 @@ Add this to a daily that's really just a one-time task, and Strategitica will kn
 
 2. [You can't edit task checkboxes yet.](https://github.com/iymeko/strategitica/issues/8) You can check and uncheck existing checkboxes, you just can't create new ones or edit/remove existing ones. Sorry, I just haven't gotten around to this yet.
 
-3. [Strategitica wasn't made with non-midnight cron in mind.](https://github.com/iymeko/strategitica/issues/28) I'm still thinking of how to handle this.'''
+3. [Strategitica wasn't made with non-midnight cron in mind.](https://github.com/iymeko/strategitica/issues/28) I'm still thinking of how to handle this.
 
 4. [Some emojis won't show up for you... yet.](https://github.com/iymeko/strategitica/issues/29) Sorry for the annoyance. This is on my to-do list.
 
