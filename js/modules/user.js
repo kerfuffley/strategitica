@@ -22,6 +22,7 @@ export class User {
         this.mp = 0;
         this.mpMax = 0;
         this.isSleeping = false;
+        this.dayStart = 0;
     }
 
     /**
@@ -123,8 +124,6 @@ export class User {
 
         this.tasks = userTasks;
 
-        //console.log(userTasks);
-
         let userInfo = null;
         userInfo = function () {
             var info = null;
@@ -176,6 +175,7 @@ export class User {
             this.mp = Math.floor(userInfo.stats.mp);
             this.mpMax = userInfo.stats.maxMP;
             this.isSleeping = userInfo.preferences.sleep;
+            this.dayStart = userInfo.preferences.dayStart;
         }
     }
 
