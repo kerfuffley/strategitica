@@ -1,5 +1,5 @@
 import * as Utils from './utils.js';
-// import { RRule, RRuleSet, rrulestr } from '../rrule.js';
+import { RRule, RRuleSet, rrulestr } from 'rrule';
 
 export class Task {
     /**
@@ -513,13 +513,13 @@ export class Task {
                 var interval = this.everyX; // [6e]
 
                 if (frequency === 'daily') {
-                    freq = rrule.RRule.DAILY; // [6a]
+                    freq = RRule.DAILY; // [6a]
                 }
                 else if (frequency === 'weekly') {
-                    freq = rrule.RRule.WEEKLY; // [6a]
+                    freq = RRule.WEEKLY; // [6a]
                 }
                 else if (frequency === 'monthly') {
-                    freq = rrule.RRule.MONTHLY; // [6a]
+                    freq = RRule.MONTHLY; // [6a]
 
                     if (daysOfMonth && daysOfMonth.length > 0) {
                         for (var i = 0; i < daysOfMonth.length; i++) {
@@ -533,30 +533,30 @@ export class Task {
                     }
                 }
                 else if (frequency === 'yearly') {
-                    freq = rrule.RRule.YEARLY; // [6a]
+                    freq = RRule.YEARLY; // [6a]
                 }
 
                 if (frequency === 'weekly' || (frequency === 'monthly' && weeksOfMonth && weeksOfMonth.length > 0)) {
                     if (repeat.su === true) {
-                        byweekday.push(rrule.RRule.SU); // [6d]
+                        byweekday.push(RRule.SU); // [6d]
                     }
                     if (repeat.m === true) {
-                        byweekday.push(rrule.RRule.MO); // [6d]
+                        byweekday.push(RRule.MO); // [6d]
                     }
                     if (repeat.t === true) {
-                        byweekday.push(rrule.RRule.TU); // [6d]
+                        byweekday.push(RRule.TU); // [6d]
                     }
                     if (repeat.w === true) {
-                        byweekday.push(rrule.RRule.WE); // [6d]
+                        byweekday.push(RRule.WE); // [6d]
                     }
                     if (repeat.th === true) {
-                        byweekday.push(rrule.RRule.TH); // [6d]
+                        byweekday.push(RRule.TH); // [6d]
                     }
                     if (repeat.f === true) {
-                        byweekday.push(rrule.RRule.FR); // [6d]
+                        byweekday.push(RRule.FR); // [6d]
                     }
                     if (repeat.s === true) {
-                        byweekday.push(rrule.RRule.SA); // [6d]
+                        byweekday.push(RRule.SA); // [6d]
                     }
                 }
     
@@ -564,44 +564,44 @@ export class Task {
     
                 if (byweekday.length > 0) {
                     if (bysetpos.length > 0) {
-                        rule = new rrule.RRule({ // [7]
+                        rule = new RRule({ // [7]
                             freq: freq, // [6a]
                             dtstart: startDate,
                             until: endDate,
                             interval: interval, // [6e]
-                            wkst: rrule.SU,
+                            wkst: RRule.SU,
                             byweekday: byweekday, // [6d]
                             bysetpos: bysetpos // [6c]
                         }).all();
                     }
                     else {
-                        rule = new rrule.RRule({ // [7]
+                        rule = new RRule({ // [7]
                             freq: freq, // [6a]
                             dtstart: startDate,
                             until: endDate,
                             interval: interval, // [6e]
-                            wkst: rrule.SU,
+                            wkst: RRule.SU,
                             byweekday: byweekday // [6d]
                         }).all();
                     }
                 }
                 else if (bymonthday.length > 0) {
-                    rule = new rrule.RRule({ // [7]
+                    rule = new RRule({ // [7]
                         freq: freq, // [6a]
                         dtstart: startDate,
                         until: endDate,
                         interval: interval, // [6e]
-                        wkst: rrule.SU,
+                        wkst: RRule.SU,
                         bymonthday: bymonthday // [6b]
                     }).all();
                 }
                 else {
-                    rule = new rrule.RRule({ // [7]
+                    rule = new RRule({ // [7]
                         freq: freq, // [6a]
                         dtstart: startDate,
                         until: endDate,
                         interval: interval, // [6e]
-                        wkst: rrule.SU
+                        wkst: RRule.SU
                     }).all();
                 }
     

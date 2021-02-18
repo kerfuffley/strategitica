@@ -1,7 +1,8 @@
-import * as Utils from './js/modules/utils.js';
-import { User } from './js/modules/user.js';
-import { Task } from './js/modules/task.js';
-import * as TaskActions from './js/modules/taskActions.js';
+import * as Utils from './modules/utils.js';
+import { User } from './modules/user.js';
+import { Task } from './modules/task.js';
+import * as TaskActions from './modules/taskActions.js';
+import './style.css';
 
 $('#modal-login').modal('show');
 
