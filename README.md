@@ -1,4 +1,4 @@
-# <img align="left" height="50" src="https://raw.githubusercontent.com/iymeko/strategitica/main/img/logo.png"> Strategitica
+# <img align="left" height="50" src="https://raw.githubusercontent.com/iymeko/strategitica/main/dist/img/logo.png"> Strategitica
 
 ## A calendar view for [Habitica](https://habitica.com/), by [@misscurmudgeon](https://habitica.com/profile/88aa06bb-ec69-43d8-b58a-e6df4aa608ac)
 
