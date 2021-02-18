@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="Description" content="Strategitica" />
+    <title>Strategitica</title>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="img/icons/apple-touch-icon.png?v=NmaomBXnME">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/icons/favicon-32x32.png?v=NmaomBXnME">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/icons/favicon-16x16.png?v=NmaomBXnME">
+    <link rel="manifest" href="img/icons/site.webmanifest?v=NmaomBXnME">
+    <link rel="mask-icon" href="img/icons/safari-pinned-tab.svg?v=NmaomBXnME" color="#248189">
+    <link rel="shortcut icon" href="img/icons/favicon.ico?v=NmaomBXnME">
+    <meta name="msapplication-TileColor" content="#248189">
+    <meta name="msapplication-config" content="img/icons/browserconfig.xml?v=NmaomBXnME">
+    <meta name="theme-color" content="#248189">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1"><script defer src="main.bundle.js"></script></head>
+
+<body>
+    <header class="header header-js">
+        <div class="container-fluid px-2">
+            <div class="row mx-n2 align-items-center">
+                <div class="col-auto px-2">
+                    <img src="img/logo-white.png" class="header-logo" alt="Strategitica logo">
+                </div>
+                <div class="col px-2" id="strategitica-stats"></div>
+                <div class="col-auto px-2">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i></button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <a class="dropdown-item" href="#" id="strategitica-add-daily"><i class="fas fa-plus"></i> Add a Daily</a>
+                            <a class="dropdown-item" href="#" id="strategitica-refresh"><i class="fas fa-redo"></i> Refresh</a>
+                            <a class="dropdown-item" href="#" id="strategitica-tavern-change1"></a>
+                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-about"><i class="fas fa-info-circle"></i> About Strategitica</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="strategitica-tavern-status" class="mt-2"></div>
+    </header>
+    <div class="container-fluid">
+        <div class="calendar" id="strategitica-calendar"></div>
+    </div>
+
+    <div id="strategitica-descriptions" class="d-none"></div>
+
+    <div class="modal fade" id="modal-login" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false" aria-labelledby="modal-login-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-login-label"><img src="img/logo.png" class="mr-3" alt="Strategitica logo" height="25"> Welcome to Strategitica!</h5>
+                  </div>
+                  <div class="modal-body">
+                    <p>Enter your Habitica user ID and API token to continue. Both can be found <a href="https://habitica.com/user/settings/api" target="_blank" class="card-link">here</a>.</p>
+
+                    <form id="strategitica-login" method="POST" target="formPasswdSaveFix">
+                        <div class="row mb-3">
+                            <label for="user-id" class="col-sm-3 col-form-label">User ID</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" name="userId" id="user-id">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="api-token" class="col-sm-3 col-form-label">API Token</label>
+                            <div class="col-sm-9">
+                                <input type="password" class="form-control" name="apiToken" id="api-token">
+                            </div>
+                        </div>
+                        <input type="submit" class="btn btn-primary" value="Let's Go!"></input>
+                    </form>
+                  </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-task" tabindex="-1" role="dialog" aria-labelledby="modal-task-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-about" tabindex="-1" role="dialog" aria-labelledby="modal-about-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-about-label">About Strategitica</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <h2 class="h6">Task Key</h2>
+                    <ul>
+                        <li>Task background color indicates difficulty:
+                            <span class="badge badge-difficulty1">Trivial</span>
+                            <span class="badge badge-difficulty2">Easy</span>
+                            <span class="badge badge-difficulty3">Medium</span>
+                            <span class="badge badge-difficulty4">Hard</span>
+                        </li>
+                        <li>The color on the left side of a task indicates its "value", <a href="https://habitica.fandom.com/wiki/Task_Value#Task_Colors" target="_blank">just like it does with Habitica.</a></li>
+                        <!-- <li><span class="badge badge-pill badge-light"><i class="fas fa-star" aria-hidden="true"></i>#</span> - This is the difficulty rating for the day. It's just a sum of the difficulty of each task that's still due on that day.</li> -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toasts toasts-js" aria-live="polite" aria-atomic="true">
+        <div class="toast toast-success fade hide" id="strategitica-toast-success" role="status" aria-live="polite" data-autohide="true" data-delay="5000">
+            <div class="toast-header">
+                <strong class="mr-auto">
+                    <span class="toast-title-js mr-2">Strategitica</span>
+                </strong>
+                <small>Just now</small>
+                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body toast-body-js"></div>
+        </div>
+        <div class="toast toast-danger fade hide" id="strategitica-toast-error" role="alert" aria-live="assertive" data-autohide="false">
+            <div class="toast-header">
+                <strong class="mr-auto">
+                    <span class="toast-title-js mr-2">Strategitica</span>
+                </strong>
+                <small>Just now</small>
+                <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body toast-body-js"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
