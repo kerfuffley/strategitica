@@ -1,4 +1,5 @@
 import * as Utils from './utils.js';
+import $ from 'jquery';
 
 export class User {
     /**

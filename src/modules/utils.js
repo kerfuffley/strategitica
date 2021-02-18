@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 export const appClient = '88aa06bb-ec69-43d8-b58a-e6df4aa608ac-Strategitica';
 
 export const monthNames = [

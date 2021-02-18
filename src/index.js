@@ -2,6 +2,9 @@ import * as Utils from './modules/utils.js';
 import { User } from './modules/user.js';
 import { Task } from './modules/task.js';
 import * as TaskActions from './modules/taskActions.js';
+
+import $ from 'jquery';
+import '../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js';
 import './style.css';
 
 $('#modal-login').modal('show');

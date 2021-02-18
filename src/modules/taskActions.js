@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import * as Utils from './utils.js';
 
 /**
