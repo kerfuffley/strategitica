@@ -29,6 +29,34 @@ module.exports = {
                 use: ['style-loader', 'css-loader'],
             },
             {
+                test: /\.scss$/,
+                use: [
+                    { loader: 'style-loader' },
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            sourceMap: true,
+                            modules: {
+                                auto: true,
+                                localIdentName: '[local]_[hash:base64:5]'
+                            }                            
+                        }
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        options: {
+                            postcssOptions: {
+                                config: 'postcss.config.js',
+                            },
+                            sourceMap: true,
+                        },
+                    },
+                    {
+                        loader: 'sass-loader', options: { sourceMap: true }
+                    }
+                ]
+            },
+            {
                 test: /\.(png|svg|jpe?g|jpeg|gif)$/i,
                 type: 'asset/resource',
             },
