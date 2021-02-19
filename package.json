@@ -25,6 +25,7 @@
     },
     "homepage": "https://github.com/iymeko/strategitica#readme",
     "devDependencies": {
+        "@fortawesome/fontawesome-free": "^5.15.2",
         "@popperjs/core": "^2.7.0",
         "autoprefixer": "^10.2.4",
         "bootstrap": "^4.6.0",
