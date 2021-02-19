@@ -39,7 +39,7 @@ module.exports = {
                             modules: {
                                 auto: true,
                                 localIdentName: '[local]_[hash:base64:5]'
-                            }                            
+                            }
                         }
                     },
                     {
@@ -63,6 +63,10 @@ module.exports = {
             },
             {
                 test: /\.(png|svg|jpe?g|jpeg|gif)$/i,
+                type: 'asset/resource',
+            },
+            {
+                test: /\.(woff|woff2|eot|ttf|otf)$/i,
                 type: 'asset/resource',
             },
         ],
