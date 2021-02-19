@@ -1,0 +1,14 @@
+// ------------------------------------ \\
+// #INFO:VARIABLES:FONTS
+// ------------------------------------ //
+
+
+// A few type variable definitions:
+//  1.  The primary font-face used.
+//  2.  The secondary font-face used.
+//  3.  Set to a font-face that generally displays numbers better than other
+//      fonts available.
+
+$font-primary:          "Trebuchet MS", Helvetica, sans-serif; // [1]
+$font-secondary:        Tahoma, Geneva, sans-serif; // [2]
+$font-numbers:          $font-primary; // [3]
