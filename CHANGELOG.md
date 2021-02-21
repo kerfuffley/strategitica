@@ -10,6 +10,8 @@
 
 * [#29](https://github.com/iymeko/strategitica/issues/29) resolved - emoji shortcodes are now supported
 
+Changes above are in [pull request #34](https://github.com/iymeko/strategitica/pull/34).
+
 ## 1.1.0 (15 February, 2021)
 
 * [#19](https://github.com/iymeko/strategitica/issues/19) resolved - To-do's now show in the calendar
