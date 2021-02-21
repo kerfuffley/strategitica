@@ -1,5 +1,7 @@
 import * as Utils from './utils.js';
+import $ from 'jquery';
 import { RRule, RRuleSet, rrulestr } from 'rrule';
+import md from 'habitica-markdown';
 
 export class Task {
     /**
@@ -676,9 +678,8 @@ export class Task {
         }
 
         var taskDuration = task.duration();
-        var taskTitleNoQuotes = task.text.replace('"', '&quot;');
 
-        return '<button type="button" class="badge badge-task badge-task-js badge-' + badgeDifficultyClass + ' badge-' + badgeValueClass + '" data-taskid="' + task.id + '" title="' + taskTitleNoQuotes + '" data-tasktitle="' + taskTitleNoQuotes + '"><span class="badge-title">' + task.text.replace('<', '&lt;').replace('>', '&gt;') + '</span><span class="sr-only">(Task value: ' + badgeValueDescription + '; Task difficulty: ' + badgeDifficultyDescription + ')</span>' + (taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : '') + '</button>';
+        return '<button type="button" class="badge badge-task badge-task-js badge-' + badgeDifficultyClass + ' badge-' + badgeValueClass + '" data-taskid="' + task.id + '"><span class="badge-title badge-title-js">' + task.text.trim().replace('<', '&lt;').replace('>', '&gt;') + '</span><span class="sr-only">(Task value: ' + badgeValueDescription + '; Task difficulty: ' + badgeDifficultyDescription + ')</span>' + (taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : '') + '</button>';
     }
 
     /**
@@ -699,7 +700,7 @@ export class Task {
 
         // Header
         headerHtml += '<div class="modal-header">';
-        headerHtml += '<h5 class="modal-title task-param-static-js" id="modal-task-' + task.id + '-label">' + (isNewTask ? 'New Task' : task.text) + '</h5>';
+        headerHtml += '<h5 class="modal-title task-param-static-js markdown-unwrap-js" id="modal-task-' + task.id + '-label">' + (isNewTask ? 'New Task' : task.text.trim()) + '</h5>';
         headerHtml += '<div class="form-group task-param-editable-js d-none"><label for="task-' + task.id + '-text" class="sr-only">Title</label><input type="text" class="form-control form-control-lg" id="task-' + task.id + '-text" value="' + taskTitleNoQuotes + '" placeholder="Task title"></div>';
         headerHtml += '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>';
         headerHtml += '</div>'; // end .modal-header
@@ -710,7 +711,7 @@ export class Task {
 
         // Notes
         if (task.notes && task.notes.trim() != null && task.notes.trim() != '') {
-            bodyHtmlStatic += '<p class="task-param-static-js">' + task.notes.trim() + '</p>';
+            bodyHtmlStatic += '<div class="task-param-static-js markdown-js">' + task.notes.trim() + '</div>';
         }
         bodyHtmlEditable += '<div class="form-group task-param-editable-js d-none"><label for="task-' + task.id + '-notes">Notes</label><textarea class="form-control form-control-sm" id="task-' + task.id + '-notes" rows="3" placeholder="Add notes">' + (task.notes ? task.notes.trim() : '') + '</textarea></div>';
 
@@ -723,7 +724,7 @@ export class Task {
                 task.checklist.forEach(function (value) {
                     bodyHtmlStatic += '<li><div class="form-check">' +
                     '<input class="form-check-input task-checklist-item-js" type="checkbox" value="" id="checklist-' + value.id + '"' + (value.completed === true ? ' checked' : '') +' data-taskid="' + task.id + '" data-itemtitle="' + value.text.replace('"', '&quot;') + '" data-itemid="' + value.id + '">' + 
-                    '<label class="form-check-label" for="checklist-' + value.id +'">' + value.text.replace('<', '&lt;').replace('>', '&gt;') +'</label>' +
+                    '<label class="form-check-label markdown-unwrap-js" for="checklist-' + value.id +'">' + value.text.trim().replace('<', '&lt;').replace('>', '&gt;') +'</label>' +
                     '</div></li>';
                 });
 
@@ -840,7 +841,7 @@ export class Task {
             if (task.tags != null && task.tags.length > 0) {
                 bodyHtmlStatic += '<tr class="task-param-static-js"><th>Tags</th><td>';
                 task.tags.forEach(function (value) {
-                    bodyHtmlStatic += '<span class="badge badge-pill badge-primary badge-tag">' + userTags[value] + '</span> ';
+                    bodyHtmlStatic += '<span class="badge badge-pill badge-light badge-tag markdown-unwrap-js">' + userTags[value].trim() + '</span> ';
                 });
                 bodyHtmlStatic += '</td></tr>';
             }
@@ -848,7 +849,7 @@ export class Task {
             Object.keys(userTags).forEach(function (key) {
                 bodyHtmlEditable += '<div class="col-xs-12 col-sm-6"><div class="form-check">';
                 bodyHtmlEditable += '<input class="form-check-input task-tag-js" type="checkbox" id="task-' + task.id + '-tag-' + key + '" value="' + key + '"' + (task.hasTag(key) ? ' checked' : '') + '>';
-                bodyHtmlEditable += '<label class="form-check-label" for="task-' + task.id + '-tag-' + key + '">' + userTags[key] + '</label>';
+                bodyHtmlEditable += '<label class="form-check-label markdown-unwrap-js" for="task-' + task.id + '-tag-' + key + '">' + userTags[key].trim() + '</label>';
                 bodyHtmlEditable += '</div></div>';
             });
             bodyHtmlEditable += '</div></div>';
@@ -884,8 +885,10 @@ export class Task {
         var task = this;
         var tooltipHtml = '';
 
+        tooltipHtml += '<h3 class="popover-header">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</h3>';
+
         if (task.notes.trim() != null && task.notes.trim() != '') {
-            tooltipHtml += '<p>' + task.notes.trim() + '</p>';
+            tooltipHtml += '<div>' + md.render(task.notes.trim()) + '</div>';
         }
 
         if (task.checklist != null) {
@@ -897,7 +900,7 @@ export class Task {
                     var iconClass = (value.completed === true ? 'far fa-check-square' : 'far fa-square');
                     var iconAriaLabel = (value.completed === true ? 'Complete' : 'Incomplete');
 
-                    tooltipHtml += '<li' + (liClasses != '' ? ' class="' + liClasses + '"' : '') + ' data-itemid="' + value.id + '"><i class="' + iconClass + ' task-checklist-icon-js" aria-label="' + iconAriaLabel + '"></i> ' + value.text.replace('<', '&lt;').replace('>', '&gt;') + '</li>';
+                    tooltipHtml += '<li' + (liClasses != '' ? ' class="' + liClasses + '"' : '') + ' data-itemid="' + value.id + '"><i class="' + iconClass + ' task-checklist-icon-js" aria-label="' + iconAriaLabel + '"></i> ' + $(md.render(value.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</li>';
                 });
 
                 tooltipHtml += '</ul>';

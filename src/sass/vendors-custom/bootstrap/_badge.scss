@@ -7,9 +7,16 @@ button.badge:focus {
     //outline: none;
 }
 
-a.badge:focus, a.badge:hover {
-    text-decoration: none; /* remove after upgrading to BS 4.5.0 or later */
+.badge {
+    border: 1px solid transparent;
 }
+
+@each $color, $value in $theme-colors {
+    .badge-#{$color} {
+        border-color: mix(#000, $value, 15%);
+    }
+}
+
 
 $badge-task-height: 1rem;
 
@@ -30,7 +37,8 @@ $badge-task-height: 1rem;
     font-weight: normal;
     overflow: hidden;
 
-    &:hover, &:focus {
+    &:hover,
+    &:focus {
         outline: 5px auto transparent;
     }
 
