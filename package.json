@@ -33,6 +33,7 @@
         "copy-webpack-plugin": "^7.0.0",
         "css-loader": "^5.0.2",
         "gh-pages": "^3.1.0",
+        "habitica-markdown": "^3.0.0",
         "html-webpack-plugin": "^5.1.0",
         "jquery": "^3.5.1",
         "postcss-loader": "^5.0.0",

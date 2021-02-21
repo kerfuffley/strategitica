@@ -5,6 +5,7 @@ import * as TaskActions from './modules/taskActions.js';
 
 import $ from 'jquery';
 import '../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js';
+import md from 'habitica-markdown';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './sass/style.scss';
@@ -20,7 +21,7 @@ if (ID != '') {
 
 let user = null;
 
-$('#strategitica-login').submit(function (event) {
+$('#strategitica-login').on('submit', function(event) {
     event.preventDefault();
 
     ID = $('#user-id').val();
@@ -418,6 +419,10 @@ function loadCalendar() {
     $('#strategitica-calendar').html(output); // [5], [7]
     $('#strategitica-descriptions').html(interactiveDescriptions); // [5d], [6], [7]
 
+    $('.badge-title-js').each(function() {
+        $(this).html($(md.render($(this).html())).html());
+    });
+
     $('.badge-task-js').on('click', function (e) { // [7]
         var taskId = $(this).data('taskid');
         var taskDescription = $('#task-' + taskId + '-modal').html();
@@ -467,6 +472,7 @@ $('body').popover({
     html: true,
     trigger: 'hover',
     placement: 'auto',
+    template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>',
     content: function () {
         return $('#task-' + $(this).data('taskid') + '-tooltip').html()
     }
@@ -476,8 +482,7 @@ $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
 });
 
-
-$(document).ready(function () {
+$(function() {
     updateHeaderSpacing();
 });
 
@@ -486,7 +491,7 @@ Utils.onResize(function () {
 });
 
 
-// --- Start menu link handlers ---
+// --- Menu link handlers here ---
 
 $('#strategitica-add-daily').on('click', function (e) {
     var taskId = 'new';
@@ -530,6 +535,14 @@ $('#modal-task').on('show.bs.modal', function (e) {
     // detecting touch isn't foolproof. So instead, we just want to make sure
     // all popovers are closed when the modal opens. So...
     $('.badge-task-js').popover('hide');
+
+    $(this).find('.markdown-js').each(function() {
+        $(this).html(md.render($(this).html()));
+    });
+
+    $(this).find('.markdown-unwrap-js').each(function() {
+        $(this).html($(md.render($(this).html())).html());
+    });
 });
 
 
