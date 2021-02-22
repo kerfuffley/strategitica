@@ -167,7 +167,7 @@ export class User {
         if (userInfo !== null) {
             this.name = userInfo.auth.local.username;
             this.displayName = userInfo.profile.name;
-            this.class = userInfo.stats.class;
+            this.class = userInfo.stats.class.toLowerCase() === 'wizard' ? 'Mage' : userInfo.stats.class.charAt(0).toUpperCase() + userInfo.stats.class.slice(1);
             this.level = userInfo.stats.lvl;
             this.hp = userInfo.stats.hp;
             this.hpMax = Math.floor(userInfo.stats.maxHealth);
