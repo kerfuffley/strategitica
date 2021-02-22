@@ -6,11 +6,17 @@
 
 ### [Strategitica](https://github.com/iymeko/strategitica) Changelog
 
+## 1.2.1 (21 February, 2021)
+
+* [#16](https://github.com/iymeko/strategitica/issues/16) resolved - mage class should now show correctly (instead of wizard)
+
+This change is in [pull request #38](https://github.com/iymeko/strategitica/pull/38).
+
 ## 1.2.0 (21 February, 2021)
 
 * [#29](https://github.com/iymeko/strategitica/issues/29) resolved - emoji shortcodes are now supported
 
-Changes above are in [pull request #34](https://github.com/iymeko/strategitica/pull/34).
+This change is in [pull request #34](https://github.com/iymeko/strategitica/pull/34).
 
 ## 1.1.0 (15 February, 2021)
 
