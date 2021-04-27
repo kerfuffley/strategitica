@@ -6,7 +6,7 @@
 
 ## How to Use
 
-Just go to https://iymeko.github.io/strategitica/ and enter your Habitica user ID and API token. Both can be found at https://habitica.com/user/settings/api. You may also go to https://iymeko.github.io/strategitica/?id=[YOUR-HABITICA-USER-ID] to pre-fill your user ID, if this saves time for you. After entering your info, you should see your tasks in calendar form for the next 6 months, roughly.
+Just go to https://iymeko.github.io/strategitica/ and enter your Habitica user ID and API token. Both can be found at https://habitica.com/user/settings/api. You may also go to https://iymeko.github.io/strategitica/?id=[YOUR-HABITICA-USER-ID] to pre-fill your user ID, if this saves time for you. After entering your info, you should see your tasks in calendar form for the next 90 days.
 
 **Note:** Once your ID/token are entered, if you think Strategitica might not be up-to-date (for example, maybe you left Strategitica's page alone for a day, or you made changes on habitica.com or the Habitica app after using Strategitica, etc.), **you can refresh your data by clicking Refresh in the menu**. This saves you from having to refresh the page and re-enter your ID/token every time you want up-to-date info. The page does data refreshes itself immediately after you make changes using Strategitica, but it can't detect changes made outside of Strategitica.
 
@@ -47,6 +47,10 @@ Habitica users will probably know that there are dailies (recurring tasks) and t
 > [strategitica|1td]
 
 Add this to a daily that's really just a one-time task, and Strategitica will know to only show that task on its due date, not on any of its recurring due dates.
+
+### Custom Days Limit ###
+
+If you want to show a different number of days in the future than the default of 90 days, you can add days=[desired number of days] to the Strategitica URL. For example, https://iymeko.github.io/strategitica/?days=30 will show 30 days in the future. This was implemented to help users who have a lot of tasks, which can cause Strategitica to take too long to load. The maximum number of days allowed is 180.
 
 ## Notable Limitations/Issues
 

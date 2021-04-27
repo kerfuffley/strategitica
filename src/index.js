@@ -130,7 +130,18 @@ function loadCalendar() {
     let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
 
     let calendarDaysLimitFromParam = parseInt(Utils.getUrlParameter('days'));
-    let calendarDaysLimit = isNaN(calendarDaysLimitFromParam) ? 90 : calendarDaysLimitFromParam; // [1]
+    let calendarDaysLimitMax = 180;
+    let calendarDaysLimit = 90; // [1]
+
+    if (!isNaN(calendarDaysLimitFromParam)) {
+        if (calendarDaysLimitFromParam <= calendarDaysLimitMax) {
+            calendarDaysLimit = calendarDaysLimitFromParam; // [1]
+        }
+        else {
+            calendarDaysLimit = calendarDaysLimitMax;
+        }
+    }
+
     let weekDayNames = [ // [1]
         ['Sunday', 'Sun'],
         ['Monday', 'Mon'],
