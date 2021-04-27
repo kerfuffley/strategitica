@@ -129,7 +129,8 @@ function loadCalendar() {
     let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [1]
     let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
 
-    let calendarDaysLimit = 186; // [1]
+    let calendarDaysLimitFromParam = parseInt(Utils.getUrlParameter('days'));
+    let calendarDaysLimit = isNaN(calendarDaysLimitFromParam) ? 90 : calendarDaysLimitFromParam; // [1]
     let weekDayNames = [ // [1]
         ['Sunday', 'Sun'],
         ['Monday', 'Mon'],
@@ -192,7 +193,7 @@ function loadCalendar() {
     var tasksTooltipText = {}; // [5d]
     var tasksModalText = {}; // [5d]
 
-    for (var i = today.getDate(); i <= calendarDaysLimit; i++) { // [5]
+    for (var i = 0; i <= calendarDaysLimit; i++) { // [5]
         var currentDay = new Date(today);
         currentDay.setDate(currentDay.getDate() + dayCounter);
         currentDay.setHours(0, 0, 0, 0);
