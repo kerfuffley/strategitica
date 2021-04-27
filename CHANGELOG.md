@@ -6,6 +6,10 @@
 
 ### [Strategitica](https://github.com/iymeko/strategitica) Changelog
 
+## 1.3.0 (27 April, 2021)
+
+* [#36](https://github.com/iymeko/strategitica/issues/36) resolved - The default number of days that will be shown in the calendar has been reduced to 90 from 186, and the days URL parameter has been added. For example, add ?days=30 to the Strategitica URL to show 30 days in the future. The maximum days allowed is 180, so any number above that will cause Strategitica to show 180 days in the future.
+
 ## 1.2.1 (21 February, 2021)
 
 * [#16](https://github.com/iymeko/strategitica/issues/16) resolved - mage class should now show correctly (instead of wizard)
