@@ -24,7 +24,7 @@ For example, if you add a tag named "[strategitica|duration|00:15]" (without quo
 
 **Another Note:** If a task has more than one duration tag, Strategitica won't recognize that the task has a duration. Use only one duration tag on a task.
 
-### Task Time of Day
+### Task Time of Day ###
 
 Similarly to task durations, you can add a blurb to the end of a tag to tell Strategitica that a task should be completed in the morning, afternoon or evening. Tasks will be grouped by time of day.
 
@@ -52,7 +52,7 @@ Add this to a daily that's really just a one-time task, and Strategitica will kn
 
 If you want to show a different number of days in the future than the default of 90 days, you can add days=[desired number of days] to the Strategitica URL. For example, https://iymeko.github.io/strategitica/?days=30 will show 30 days in the future. This was implemented to help users who have a lot of tasks, which can cause Strategitica to take too long to load. The maximum number of days allowed is 180.
 
-## Notable Limitations/Issues
+## Notable Limitations/Issues ##
 
 1. [Strategitica doesn't run cron.](https://github.com/iymeko/strategitica/issues/12) I may implement this one day, but right now, if you start your day and cron hasn't run yet, you'll see yesterday's tasks as today's tasks in your calendar. So, use habitica.com or the Habitica app to run cron.
 
@@ -63,3 +63,11 @@ If you want to show a different number of days in the future than the default of
 4. Strategitica does its very best to put all your recurring tasks in the right place on your calendar. However, if a daily has a due date in the past, there's a chance it'll get placed at a date slightly off from when it should actually appear. This is because when a due date is in the past, it uses Habitica's API to find the next due date, and sometimes that date is wrong. I couldn't tell you why because I didn't make the API. For example, I set a daily's date on April 11th, 2020, and it's due every 12 months on that day of the month. In February 2021, I should see that task show up on April 11th, 2021. For some reason though, the Habitica API comes back with April 10th, 2021 as the earliest "next due" date. So basically, Strategitica sees April 10th, 2021 as the first date for this task, and it also sees that it should show up on April 11th, 2021 as well, so it adds both dates to the calendar. I'm not sure if there's much I can do about this.
 
 5. If you have a daily set to repeat monthly on a day of the month that doesn't exist for some month (e.g. on the 30th, but there's no 30th in February), your task won't show up in that month, although Habitica will consider it due on the last day of that month. The one exception is if you set it to repeat on the 31st. Then, Strategitica will understand you want it to be due on the last day of the month. Sorry! Maybe I can do something about this someday, I'm not sure.
+
+## Debugging ##
+
+If you're having a problem with Strategitica and want to report it, please do this:
+
+1. Go to https://iymeko.github.io/strategitica/?logs=true. This enables more verbose logging of what's going on with Strategitica than just errors.
+2. Do whatever you were doing that caused an problem for you. You should be able to see the logs by clicking Logs in the menu, or in the login window if you're not able to get past entering your user ID and API token.
+3. Describe your issue to me and include the full contents of the logs. You can do this by either [creating an issue on GitHub](https://github.com/iymeko/strategitica/issues/new/choose) (this is the preferred option), or by sending me a message in Habitica. Here's [a link to my Habitica profile](https://habitica.com/profile/88aa06bb-ec69-43d8-b58a-e6df4aa608ac) if you choose to go that route.

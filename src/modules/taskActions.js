@@ -39,6 +39,7 @@ export function complete(taskId, taskTitle, user) {
                 $('#modal-task .btn-task-complete-js').html('Completed! Updating page...');
                 $('#modal-task').modal('hide');
 
+                Utils.updateLogs(taskTitle + ': ' + message);
                 Utils.updateToast('success', taskTitle, message);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
@@ -50,12 +51,16 @@ export function complete(taskId, taskTitle, user) {
                     }
                 }
 
+                Utils.updateLogs('Error: ' + message, true);
                 Utils.updateToast('error', 'Error', message);
             });
     }
     catch (error) {
         $('#modal-task').modal('hide');
-        Utils.updateToast('error', 'Error', 'Couldn\'t complete ' + taskTitle + ': <br>' + error.responseText);
+
+        var message = 'Couldn\'t complete ' + taskTitle + ': <br>' + error.responseText;
+        Utils.updateLogs('Error: ' + message, true);
+        Utils.updateToast('error', 'Error', message);
     }
 }
 
@@ -109,6 +114,7 @@ export function remove(taskId, taskTitle, user) {
                     $('#modal-task .btn-task-delete-js').html('Deleted. Updating page...');
                     $('#modal-task').modal('hide');
 
+                    Utils.updateLogs(taskTitle + ': ' + message);
                     Utils.updateToast('success', taskTitle, message);
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
@@ -121,12 +127,17 @@ export function remove(taskId, taskTitle, user) {
                     }
 
                     $('#modal-task').modal('hide');
+
+                    Utils.updateLogs('Error: ' + message, true);
                     Utils.updateToast('error', taskTitle, message);
                 });
         }
         catch (error) {
             $('#modal-task').modal('hide');
-            Utils.updateToast('error', taskTitle, 'Couldn\'t delete task: <br>' + error.responseText);
+
+            var message = 'Couldn\'t delete task: <br>' + error.responseText;
+            Utils.updateLogs('Error: ' + message, true);
+            Utils.updateToast('error', taskTitle, message);
         }
     }
 }
@@ -266,7 +277,8 @@ export function save(taskId, user) {
     
                 $('#modal-task .btn-task-edit-done-js').html('Saved! Updating page...');
                 $('#modal-task').modal('hide');
-    
+
+                Utils.updateLogs(taskText + ': ' + message);
                 Utils.updateToast('success', taskText, message);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
@@ -277,13 +289,17 @@ export function save(taskId, user) {
                         message += ' - ' + jqXHR.responseJSON.message;
                     }
                 }
-    
+
+                Utils.updateLogs('Error: ' + message, true);
                 Utils.updateToast('error', 'Error', message);
             });
         }
         catch (error) {
             $('#modal-task').modal('hide');
-            Utils.updateToast('error', 'Error', 'Couldn\'t save ' + taskText + ': <br>' + error.responseText);
+
+            var message = 'Couldn\'t save ' + taskText + ': <br>' + error.responseText;
+            Utils.updateLogs('Error: ' + message, true);
+            Utils.updateToast('error', 'Error', message);
         }
     }
 }
@@ -317,8 +333,9 @@ export function scoreChecklistItem(checkbox, user) {
         })
         .done(function (data) {      
             // Cool, it worked! Let's be quiet about it though--it's just a
-            // checkbox. Updating a tost for this is a tad annoying to the
+            // checkbox. Updating a toast for this is a tad annoying to the
             // user, I think.
+            Utils.updateLogs(data.data.text + ': Checklist item scored successfully');
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
             let message = 'Couldn\'t score checklist item: <br>' + jqXHR.status + ' Error';
@@ -329,11 +346,15 @@ export function scoreChecklistItem(checkbox, user) {
                 }
             }
 
+            Utils.updateLogs('Error: ' + message, true);
             Utils.updateToast('error', itemTitle, message);
         });
     }
     catch (error) {
         $('#modal-task').modal('hide');
-        Utils.updateToast('error', itemTitle, 'Couldn\'t score checklist item: <br>' + error.responseText);
+
+        var message = 'Couldn\'t score checklist item: <br>' + error.responseText;
+        Utils.updateLogs('Error: ' + message, true);
+        Utils.updateToast('error', itemTitle, message);
     }
 }

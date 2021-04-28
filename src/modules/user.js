@@ -54,6 +54,7 @@ export class User {
                 })
                     .done(function (data) {
                         tags = data.data;
+                        Utils.updateLogs('Tags loaded successfully');
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
                         var message = 'Couldn\'t get user\'s tags: \n' + jqXHR.status + ' Error';
@@ -64,11 +65,12 @@ export class User {
                             }
                         }
 
-                        console.log(message);
+                        Utils.updateLogs(message, true);
                     });
             }
             catch (error) {
-                console.log('Couldn\'t get user\'s tags: ' + error.responseText);
+                var message = 'Couldn\'t get user\'s tags: ' + error.responseText;
+                Utils.updateLogs(message, true);
             }
 
             return tags;
@@ -103,6 +105,7 @@ export class User {
                 })
                     .done(function (data) {
                         tasks = data.data;
+                        Utils.updateLogs('Tasks loaded successfully');
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
                         let message = 'Couldn\'t get user\'s tasks: <br>' + jqXHR.status + ' Error';
@@ -113,11 +116,12 @@ export class User {
                             }
                         }
 
-                        $('#strategitica-calendar').html(message);
+                        Utils.updateLogs(message, true);
                     });
             }
             catch (error) {
-                $('#strategitica-calendar').html('Couldn\'t get user\'s tasks: <br>' + error.responseText);
+                var message = 'Couldn\'t get user\'s tasks: <br>' + error.responseText;
+                Utils.updateLogs(message, true);
             }
 
             return tasks;
@@ -144,6 +148,18 @@ export class User {
                 })
                     .done(function (data) {
                         info = data.data;
+
+                        var message = `User info loaded successfully. Here's some info about you:<br>
+                        Name: @${info.auth.local.username}<br>
+                        Display Name: ${info.profile.name}<br>
+                        Class: ${info.stats.class.toLowerCase() === 'wizard' ? 'Mage' : info.stats.class.charAt(0).toUpperCase() + info.stats.class.slice(1)}<br>
+                        Level: ${info.stats.lvl}<br>
+                        HP: ${info.stats.hp} / ${Math.floor(info.stats.maxHealth)}<br>
+                        Experience: ${Math.floor(info.stats.exp)} / ${info.stats.toNextLevel}<br>
+                        MP: ${Math.floor(info.stats.mp)} / ${info.stats.maxMP}<br>
+                        Resting in the tavern: ${info.preferences.sleep}<br>
+                        Day start: ${info.preferences.dayStart}`;
+                        Utils.updateLogs(message);
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
                         var message = 'Couldn\'t load user info: <br>' + jqXHR.status + ' Error';
@@ -153,12 +169,12 @@ export class User {
                                 message += ' - ' + jqXHR.responseJSON.message;
                             }
                         }
-            
-                        $('#strategitica-stats').html(message);
+
+                        Utils.updateLogs('Error: ' + message, true);
                     });
             }
             catch (error) {
-                $('#strategitica-stats').html(error.responseText);
+                Utils.updateLogs(error.resposeText, true);
             }
 
             return info;
@@ -208,7 +224,10 @@ export class User {
             })
                 .done(function (data) {
                     isSleeping = data.data;
-                    Utils.updateToast('success', 'Tavern Status', 'You have successfully ' + (isSleeping === true ? 'entered' : 'left') + ' the tavern.');
+
+                    var message = 'You have successfully ' + (isSleeping === true ? 'entered' : 'left') + ' the tavern.';
+                    Utils.updateLogs(message);
+                    Utils.updateToast('success', 'Tavern Status', message);
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
                     let message = 'Couldn\'t update tavern status: <br>' + jqXHR.status + ' Error';
@@ -218,13 +237,17 @@ export class User {
                             message += ' - ' + jqXHR.responseJSON.message;
                         }
                     }
-    
+
+                    Utils.updateLogs('Error: ' + message, true);
                     Utils.updateToast('error', 'Error', message);
                 });
         }
         catch (error) {
             $('#strategitica-tavern-change1').hide();
-            Utils.updateToast('error', 'Error', 'Couldn\'t update tavern status: <br>' + error.responseText);
+
+            var message = 'Couldn\'t update tavern status: <br>' + error.responseText;
+            Utils.updateLogs('Error: ' + message, true);
+            Utils.updateToast('error', 'Error', message);
         }
 
         this.isSleeping = isSleeping;

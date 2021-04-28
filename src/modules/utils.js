@@ -38,6 +38,8 @@ export function getUrlParameter(name) {
     return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
 }
 
+export const showLogs = getUrlParameter('logs') === 'true';
+
 /**
  * You can't just output a Date variable in JS and expect it to look readable,
  * and for debugging purposes, I want things to be readable. So this is here to
@@ -112,4 +114,28 @@ export function updateToast(type, title, body) {
     el.find('.toast-title-js').html(title);
     el.find('.toast-body-js').html(body);
     el.toast('show');
+}
+
+export function updateLogs(text, isError) {
+    if (showLogs || isError) {
+        var contextClasses = '';
+
+        if (isError) {
+            contextClasses += 'bg-danger text-light';
+        }
+        else  {
+            contextClasses += 'bg-dark text-light'
+        }
+    
+        var now = new Date();
+        var timestamp = $('<span class="pr-1">[' + (now.getHours() < 10 ? '0' : '') + now.getHours() + ':' + (now.getMinutes() < 10 ? '0' : '') + now.getMinutes() + ':' + (now.getSeconds() < 10 ? '0' : '') + now.getSeconds() + ']</span> ');
+        
+        var textContainer = $('<code class="media px-1 ' + contextClasses + '" />')
+        var mediaBody = $('<div class="media-body" />');
+    
+        mediaBody.append(text);
+        textContainer.append(timestamp);
+        textContainer.append(mediaBody);
+        $('.strategitica-logs-js').append(textContainer);
+    }
 }

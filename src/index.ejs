@@ -35,6 +35,7 @@
                             <a class="dropdown-item" href="#" id="strategitica-refresh"><i class="fas fa-redo"></i> Refresh</a>
                             <a class="dropdown-item" href="#" id="strategitica-tavern-change1"></a>
                             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modal-about"><i class="fas fa-info-circle"></i> About Strategitica</a>
+                            <a class="dropdown-item d-none" href="#" id="strategitica-logs" data-toggle="modal" data-target="#modal-logs"><i class="fas fa-bug"></i> Logs</a>
                         </div>
                     </div>
                 </div>
@@ -53,11 +54,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modal-login-label"><img src="img/logo.png" class="mr-3" alt="Strategitica logo" height="25"> Welcome to Strategitica!</h5>
-                  </div>
-                  <div class="modal-body">
+                </div>
+                <div class="modal-body">
                     <p>Enter your Habitica user ID and API token to continue. Both can be found <a href="https://habitica.com/user/settings/api" target="_blank" class="card-link">here</a>.</p>
 
-                    <form id="strategitica-login" method="POST" target="formPasswdSaveFix">
+                    <form id="strategitica-login" method="POST">
                         <div class="row mb-3">
                             <label for="user-id" class="col-sm-3 col-form-label">User ID</label>
                             <div class="col-sm-9">
@@ -72,7 +73,8 @@
                         </div>
                         <input type="submit" class="btn btn-primary" value="Let's Go!"></input>
                     </form>
-                  </div>
+                    <div class="mt-2 strategitica-logs-js"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -108,6 +110,18 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modal-logs" tabindex="-1" role="dialog" aria-labelledby="modal-logs-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-logs-label">Logs</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body strategitica-logs-js"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="toasts toasts-js" aria-live="polite" aria-atomic="true">
         <div class="toast toast-success fade hide" id="strategitica-toast-success" role="status" aria-live="polite" data-autohide="true" data-delay="5000">
             <div class="toast-header">
@@ -135,4 +149,5 @@
         </div>
     </div>
 </body>
+
 </html>

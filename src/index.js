@@ -134,11 +134,17 @@ function loadCalendar() {
     let calendarDaysLimit = 90; // [1]
 
     if (!isNaN(calendarDaysLimitFromParam)) {
-        if (calendarDaysLimitFromParam <= calendarDaysLimitMax) {
-            calendarDaysLimit = calendarDaysLimitFromParam; // [1]
+        if (calendarDaysLimitFromParam > calendarDaysLimitMax) {
+            Utils.updateLogs('Custom days limit (' + calendarDaysLimitFromParam + ') exceeds the maximum allowed (' + calendarDaysLimitMax + '); the default days limit will be used (' + calendarDaysLimit + ')');
         }
         else {
-            calendarDaysLimit = calendarDaysLimitMax;
+            if (calendarDaysLimitFromParam < 0) {
+                Utils.updateLogs('Custom days limit (' + calendarDaysLimitFromParam + ') cannot be less than zero; the default days limit will be used (' + calendarDaysLimit + ')');
+            }
+            else {
+                Utils.updateLogs('Custom days limit recognized (' + calendarDaysLimitFromParam + ')');
+                calendarDaysLimit = calendarDaysLimitFromParam; // [1]
+            }
         }
     }
 
@@ -154,21 +160,50 @@ function loadCalendar() {
     let datesWithTasksDue = {}; // [2]
 
     for (var i = 0; i < tasks.length; i++) { // [3]
-        var task = new Task(tasks[i], user);
-        task.create();
-
-        var taskDates = task.dates(calendarDaysLimit); // [3]
-
-        if (taskDates.length > 0) { // [3]
-            for (var j = 0; j < taskDates.length; j++) {
-                var date = taskDates[j];
-                if (!(date in datesWithTasksDue)) {
-                    datesWithTasksDue[date] = []; // [2]
+        if (tasks[i].type !== 'habit' && tasks[i].type !== 'reward') {
+            var task = new Task(tasks[i], user);
+            task.create();
+    
+            var taskDates = task.dates(calendarDaysLimit); // [3]
+    
+            if (taskDates.length > 0) { // [3]
+                var taskInfo = `We'll be looking at ${task.text} now; here's some info about it: <br>
+                ID: ${task.id}<br>
+                Type: ${task.type}<br>
+                Tags: ${task.tags}<br>
+                Notes: ${task.notes}<br>
+                Date: ${task.date}<br>
+                Priority: ${task.priority}<br>
+                Reminders: ${task.reminders}<br>
+                Frequency: ${task.frequency}<br>
+                Repeat: ${task.repeat}<br>
+                Every X: ${task.everyX}<br>
+                Days of Month: ${task.daysOfMonth}<br>
+                Weeks of Month: ${task.weeksOfMonth}<br>
+                Start Date: ${task.startDate}<br>
+                Completed: ${task.completed}<br>
+                Is Due: ${task.isDue}<br>
+                Next Due: ${task.nextDue}<br>
+                Checklist: ${task.checklist}<br>
+                Value: ${task.value}<br>
+                Time of Day: ${task.timeOfDay}`;
+                Utils.updateLogs(taskInfo);
+    
+                for (var j = 0; j < taskDates.length; j++) {
+                    var date = taskDates[j];
+                    if (!(date in datesWithTasksDue)) {
+                        datesWithTasksDue[date] = []; // [2]
+                    }
+    
+                    if (datesWithTasksDue[date].indexOf(task.id) === -1) {
+                        datesWithTasksDue[date][task.id] = task; // [2], [3]
+    
+                        Utils.updateLogs(task.text + ' added to ' + date);
+                    }
                 }
-
-                if (datesWithTasksDue[date].indexOf(task.id) === -1) {
-                    datesWithTasksDue[date][task.id] = task; // [2], [3]
-                }
+            }
+            else {
+                Utils.updateLogs('No applicable dates found for ' + task.text + ' - it won\'t be added to the calendar');
             }
         }
     }
@@ -486,7 +521,7 @@ $('body').popover({
     placement: 'auto',
     template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>',
     content: function () {
-        return $('#task-' + $(this).data('taskid') + '-tooltip').html()
+        return $('#task-' + $(this).data('taskid') + '-tooltip').html();
     }
 });
 
@@ -494,7 +529,11 @@ $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
 });
 
-$(function() {
+$(function () {
+    if (Utils.showLogs) {
+        $('#strategitica-logs').removeClass('d-none');
+    }
+
     updateHeaderSpacing();
 });
 
