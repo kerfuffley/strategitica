@@ -109,11 +109,17 @@ export function formatDuration(durationInMinutes) {
     return durationFormatted;
 }
 
-export function updateToast(type, title, body) {
+export function updateToast(type, title, body, toastToHide) {
     var el = $('#strategitica-toast-' + type);
     el.find('.toast-title-js').html(title);
     el.find('.toast-body-js').html(body);
+
     el.toast('show');
+
+    if (toastToHide) {
+        var el2 = $('#strategitica-toast-' + toastToHide);
+        el2.toast('hide');
+    }
 }
 
 export function updateLogs(text, isError) {

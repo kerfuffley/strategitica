@@ -27,25 +27,36 @@ $('#strategitica-login').on('submit', function(event) {
     ID = $('#user-id').val();
     token = $('#api-token').val();
 
-    loadAll(false);
+    $('#strategitica-login-progress').removeClass('d-none');
 
-    $('#modal-login').modal('hide');
+    loadAll(false, function() {
+        $('#modal-login').modal('hide');
+    });
 });
 
 /**
  * Get the user's data and put their info into the page.
  */
-function loadAll(showMessage) {
-    user = new User(ID, token);
-    user.create();
-
-    loadUserStats();
-    loadCalendar();
-    loadTavernStatus();
-
+function loadAll(showMessage, onComplete) {
     if (showMessage) {
-        Utils.updateToast('success', 'Data refreshed', 'Thanks for waiting!');
+        Utils.updateToast('info', 'Refreshing', 'Hang on a sec...');
     }
+
+    user = new User(ID, token);
+    user.create(function() {
+        loadUserStats();
+        loadCalendar();
+        loadTavernStatus();
+
+        if (onComplete) {
+            onComplete();
+        }
+        
+        if (showMessage) {
+            Utils.updateLogs('Data refreshed successfully');
+            Utils.updateToast('success', 'Data refreshed', 'Thanks for waiting!', 'info');
+        }
+    });
 }
 
 /**
@@ -498,8 +509,7 @@ function loadTavernStatus() {
 
     if (user.isSleeping === true) {
         $('#strategitica-tavern-change2').on('click', function () {
-            user.changeTavernStatus();
-            loadTavernStatus();
+            user.changeTavernStatus(loadTavernStatus);
         });
     }
 
@@ -557,8 +567,7 @@ $('#strategitica-refresh').on('click', function () {
 });
 
 $('#strategitica-tavern-change1').on('click', function () {
-    user.changeTavernStatus();
-    loadTavernStatus();
+    user.changeTavernStatus(loadTavernStatus);
 });
 
 // --- End menu link handlers ---
@@ -594,6 +603,10 @@ $('#modal-task').on('show.bs.modal', function (e) {
     $(this).find('.markdown-unwrap-js').each(function() {
         $(this).html($(md.render($(this).html())).html());
     });
+});
+
+$('#strategitica-logs-clear').on('click', function() {
+    $('.strategitica-logs-js').empty();
 });
 
 
