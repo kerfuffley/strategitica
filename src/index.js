@@ -110,10 +110,9 @@ function loadUserStats() {
  *      b.  Start adding up the difficulty of each task to come up with a
  *          difficulty rating for the day.
  *      c.  Put each task into an array based on which time of day it is.
- *      d.  Generate some tooltip and modal HTML associated with each task (see
- *          {@link Task.tooltipHtml} and {@link Task.modalHtml}) and add that
- *          HTML string to two respective arrays. We'll be dealing with that
- *          info shortly.
+ *      d.  Generate some tooltip HTML associated with each task (see
+ *          {@link Task.tooltipHtml}) and add that HTML string to an array.
+ *          We'll be dealing with that info shortly.
  * 6.   Once we've looped through all the days, we'll simply loop through
  *      everything in the tooltip and modal HTML arrays and append each chunk
  *      of HTML to a node with a unique ID that includes the task ID. This is
@@ -258,7 +257,6 @@ function loadCalendar() {
 
     var dayCounter = 0; // [5]
     var tasksTooltipText = {}; // [5d]
-    var tasksModalText = {}; // [5d]
 
     for (var i = 0; i <= calendarDaysLimit; i++) { // [5]
         var currentDay = new Date(today);
@@ -325,10 +323,6 @@ function loadCalendar() {
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
                     }
-
-                    if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = value.modalHtml(); // [5d]
-                    }
                 });
 
                 dayTasks += '<div><small>Morning:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Morning tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -353,10 +347,6 @@ function loadCalendar() {
 
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
-                    }
-
-                    if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = value.modalHtml(); // [5d]
                     }
                 });
 
@@ -383,10 +373,6 @@ function loadCalendar() {
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
                     }
-
-                    if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = value.modalHtml(); // [5d]
-                    }
                 });
 
                 dayTasks += '<div><small>Evening:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Evening tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -411,10 +397,6 @@ function loadCalendar() {
 
                     if (!(value.id in tasksTooltipText)) {
                         tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
-                    }
-
-                    if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = value.modalHtml(); // [5d]
                     }
                 });
 
@@ -455,32 +437,6 @@ function loadCalendar() {
         interactiveDescriptions += '<div id="task-' + key + '-tooltip">' + tasksTooltipText[key] + '</div>'; // [5d], [6]
     });
 
-    Object.keys(tasksModalText).forEach(function (key) {
-        interactiveDescriptions += '<div id="task-' + key + '-modal">' + tasksModalText[key] + '</div>'; // [5d], [6]
-    });
-
-    var newTask = new Task({
-        id: 'new',
-        text: 'New Task',
-        type: 'daily',
-        priority: 1,
-        frequency: 'weekly',
-        repeat: {
-            'su': true,
-            'm': true,
-            't': true,
-            'w': true,
-            'th': true,
-            'f': true,
-            's': true
-        },
-        everyX: 1,
-        tags: []
-    }, user);
-    newTask.create();
-
-    interactiveDescriptions += '<div id="task-new-modal">' + newTask.modalHtml() + '</div>';
-
     $('#strategitica-calendar').html(output); // [5], [7]
     $('#strategitica-descriptions').html(interactiveDescriptions); // [5d], [6], [7]
 
@@ -489,10 +445,8 @@ function loadCalendar() {
     });
 
     $('.badge-task-js').on('click', function (e) { // [7]
-        var taskId = $(this).data('taskid');
-        var taskDescription = $('#task-' + taskId + '-modal').html();
-        $('#modal-task').find('.modal-content').html(taskDescription);
-        $('#modal-task').modal('show');
+        TaskActions.openModal($(this).data('taskid'), user);
+        TaskActions.editCancel();
     });
 }
 
@@ -562,11 +516,8 @@ Utils.onResize(function () {
 // --- Menu link handlers here ---
 
 $('#strategitica-add-daily').on('click', function (e) {
-    var taskId = 'new';
-    var taskDescription = $('#task-' + taskId + '-modal').html();
-    $('#modal-task').find('.modal-content').html(taskDescription);
+    TaskActions.openModal('new', user);
     TaskActions.edit();
-    $('#modal-task').modal('show');
 });
 
 $('#strategitica-refresh').on('click', function () {
@@ -581,35 +532,12 @@ $('#strategitica-tavern-change1').on('click', function () {
 
 
 $('#modal-task').on('show.bs.modal', function (e) {
-    // Let's avoid duplicate IDs, please...
-    $(this).find('[id]').each(function () {
-        var itemId = $(this).attr('id');
-        $(this).attr('id', itemId + '-modal');
-    });
-
-    // Gotta change the labels to match the new IDs too
-    $(this).find('[for]').each(function () {
-        var itemFor = $(this).attr('for');
-        $(this).attr('for', itemFor + '-modal');
-    });
-
-    // Gotta change the aria-labelledby to match as well
-    $(this).attr('aria-labelledby', $(this).find('.modal-header .modal-title').first().attr('id'));
-
     // On non-touch devices, popovers appear when hovering over a task, and the
     // modal appears when clicking a task. On touch devices, both appear when
     // touching a task. We only want the modal to appear on touch devices, but
     // detecting touch isn't foolproof. So instead, we just want to make sure
     // all popovers are closed when the modal opens. So...
     $('.badge-task-js').popover('hide');
-
-    $(this).find('.markdown-js').each(function() {
-        $(this).html(md.render($(this).html()));
-    });
-
-    $(this).find('.markdown-unwrap-js').each(function() {
-        $(this).html($(md.render($(this).html())).html());
-    });
 });
 
 $('#strategitica-logs-clear').on('click', function() {
@@ -620,16 +548,18 @@ $('#strategitica-logs-clear').on('click', function() {
 // --- Start task change handlers ---
 
 $(document).on('change', '.task-checklist-item-js', function (e) {
-    TaskActions.scoreChecklistItem($(this), user);
-    loadAll(false);
+    TaskActions.scoreChecklistItem($(this), user, function() {
+        loadAll(false);
+    });
 });
 
-$(document).on('click', '.btn-task-complete-js', function (e) {
-    TaskActions.complete($(this).data('taskid'), $(this).data('tasktitle'), user);
-    loadAll(false);
+$(document).on('click', '#task-complete', function (e) {
+    TaskActions.complete($(this).data('taskid'), $(this).data('tasktitle'), user, function() {
+        loadAll(false);
+    });
 });;
 
-$(document).on('click', '.btn-task-edit-js', function (e) {
+$(document).on('click', '#task-edit', function (e) {
     TaskActions.edit();
 });
 
@@ -637,23 +567,29 @@ $(document).on('click', '.btn-task-edit-cancel-js', function (e) {
     TaskActions.editCancel();
 });
 
-$(document).on('click', '.btn-task-delete-js', function (e) {
-    TaskActions.remove($(this).data('taskid'), $(this).data('tasktitle'), user);
-    loadAll(false);
+$(document).on('click', '#task-delete', function (e) {
+    TaskActions.remove($(this).data('taskid'), $(this).data('tasktitle'), user, function() {
+        loadAll(false);
+    });
 });
 
 $(document).on('click', '.btn-task-save-js', function (e) {
-    TaskActions.save($(this).data('taskid'), user);
-    loadAll(false);
+    TaskActions.save($(this).data('taskid'), user, function() {
+        loadAll(false);
+    });
 });
 
 $(document).on('change', '#modal-task [name="task-frequency"]', function () {
-    var taskRepeatContainer = $('#modal-task .task-param-repeat-js');
-    var taskDaysWeeksOfMonthContainer = $('#modal-task .task-param-daysweeksofmonth-js');
-    var taskEveryXAddon = $('#modal-task .task-everyx-addon-js');
+    var taskRepeatContainer = $('#task-repeat-container');
+    var taskDaysWeeksOfMonthContainer = $('#task-daysweeksofmonth-container');
+    var taskEveryXAddon = $('#task-everyx-addon');
 
     if ($(this).val() === 'weekly') {
         taskRepeatContainer.removeClass('d-none');
+
+        if ($('#task-repeat-m:checked, #task-repeat-t:checked, #task-repeat-w:checked, #task-repeat-th:checked, #task-repeat-f:checked, #task-repeat-s:checked, #task-repeat-su:checked').length === 0) {
+            $('#task-repeat-su').prop('checked', true);
+        }
     }
     else {
         taskRepeatContainer.addClass('d-none');
@@ -662,14 +598,14 @@ $(document).on('change', '#modal-task [name="task-frequency"]', function () {
     if ($(this).val() === 'monthly') {
         taskDaysWeeksOfMonthContainer.removeClass('d-none');
 
-        if ($('#modal-task [name="task-dayofweekmonth"]:checked').length === 0) {
-            $('#modal-task [name="task-dayofweekmonth"]').first().prop('checked', true);
+        if ($('[name="task-dayofweekmonth"]:checked').length === 0) {
+            $('[name="task-dayofweekmonth"]').first().prop('checked', true);
         }
     }
     else {
         taskDaysWeeksOfMonthContainer.addClass('d-none');
 
-        $('#modal-task [name="task-dayofweekmonth"]').prop('checked', false);
+        $('[name="task-dayofweekmonth"]').prop('checked', false);
     }
 
     taskEveryXAddon.html(Utils.frequencyPlurals[$(this).val()]);

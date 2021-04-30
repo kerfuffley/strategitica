@@ -1,5 +1,7 @@
 import $ from 'jquery';
 import * as Utils from './utils.js';
+import { Task } from './task.js';
+import md from 'habitica-markdown';
 
 /**
  * Uses the Habitica API to complete a task.
@@ -9,7 +11,7 @@ import * as Utils from './utils.js';
  * @param {User} user - The user the task belongs to
  * @see {@link https://habitica.com/apidoc/#api-Task-ScoreTask|Task - Score a task}
  */
-export function complete(taskId, taskTitle, user) {
+export function complete(taskId, taskTitle, user, onComplete) {
     try {
         $.ajax({
             url: 'https://habitica.com/api/v3/tasks/' + taskId + '/score/up',
@@ -36,11 +38,14 @@ export function complete(taskId, taskTitle, user) {
                     }
                 }
 
-                $('#modal-task .btn-task-complete-js').html('Completed! Updating page...');
                 $('#modal-task').modal('hide');
 
                 Utils.updateLogs(taskTitle + ': ' + message);
                 Utils.updateToast('success', taskTitle, message);
+
+                if (onComplete) {
+                    onComplete();
+                }
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 let message = 'Couldn\'t complete ' + taskTitle + ': <br>' + jqXHR.status + ' Error';
@@ -68,8 +73,8 @@ export function complete(taskId, taskTitle, user) {
  * Hides the non-editing parts of the task modal and shows the editing parts.
  */
 export function edit() {
-    $('#modal-task .btn-group-task1-js').addClass('d-none');
-    $('#modal-task .btn-group-task2-js').removeClass('d-none');
+    $('#task-controls1').addClass('d-none');
+    $('#task-controls2').removeClass('d-none');
 
     $('#modal-task .task-param-editable-js').removeClass('d-none');
     $('#modal-task .task-param-static-js').addClass('d-none');
@@ -79,8 +84,8 @@ export function edit() {
  * Basically, the opposite of {@link edit}.
  */
 export function editCancel() {
-    $('#modal-task .btn-group-task1-js').removeClass('d-none');
-    $('#modal-task .btn-group-task2-js').addClass('d-none');
+    $('#task-controls1').removeClass('d-none');
+    $('#task-controls2').addClass('d-none');
 
     $('#modal-task .task-param-editable-js').addClass('d-none');
     $('#modal-task .task-param-static-js').removeClass('d-none');
@@ -94,7 +99,7 @@ export function editCancel() {
  * @param {User} user - The user the task belongs to
  * @see {@link https://habitica.com/apidoc/#api-Task-DeleteTask|Task - Delete a task}
  */
-export function remove(taskId, taskTitle, user) {
+export function remove(taskId, taskTitle, user, onComplete) {
     if (confirm('Are you sure you want to delete this task?')) {
         try {
             $.ajax({
@@ -116,6 +121,10 @@ export function remove(taskId, taskTitle, user) {
 
                     Utils.updateLogs(taskTitle + ': ' + message);
                     Utils.updateToast('success', taskTitle, message);
+
+                    if (onComplete) {
+                        onComplete();
+                    }
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
                     let message = 'Couldn\'t delete task: <br>' + jqXHR.status + ' Error';
@@ -149,17 +158,17 @@ export function remove(taskId, taskTitle, user) {
  * @param {User} user - The user the task belongs to
  * @see {@link https://habitica.com/apidoc/#api-Task-UpdateTask|Task - Update a task}
  */
-export function save(taskId, user) {
+export function save(taskId, user, onComplete) {
     var isNewTask = taskId === 'new';
-    var taskText = $('#task-' + taskId + '-text-modal').val();
+    var taskText = $('#task-text').val();
 
     if (taskText.trim() === '') {
         alert('The task title is required.');
     }
     else {
-        var taskType = $('#task-' + taskId + '-type-modal').val();
-        var taskNotes = $('#task-' + taskId + '-notes-modal').val();
-        var taskDifficulty = parseFloat($('#task-' + taskId + '-difficulty-modal').val());
+        var taskType = $('#task-type').val();
+        var taskNotes = $('#task-notes').val();
+        var taskDifficulty = parseFloat($('#task-difficulty').val());
 
         var taskParameters = {
             'text': taskText, // task title; required
@@ -172,22 +181,22 @@ export function save(taskId, user) {
         if (isNewTask) {
             taskParameters['type'] = taskType;
         }
-    
+
         if (taskType === 'daily') {
-            var taskStartDate = new Date($('#task-' + taskId + '-startdate-modal').val() + 'T00:00:00');
+            var taskStartDate = new Date($('#task-startdate').val() + 'T00:00:00');
             taskParameters['startDate'] = taskStartDate;
-    
-            var taskFrequency = $('#task-' + taskId + '-frequency-modal').val();
+
+            var taskFrequency = $('#task-frequency').val();
             taskParameters['frequency'] = taskFrequency;
-    
-            var taskEveryX = Math.floor($('#task-' + taskId + '-everyx-modal').val());
+
+            var taskEveryX = Math.floor($('#task-everyx').val());
             taskParameters['everyX'] = taskEveryX;
-    
-            var isMonthlyDayOfMonth = taskFrequency === 'monthly' && $('#task-' + taskId + '-dayofmonth-modal').is(':checked') ? true : false;
-            var isMonthlyWeekOfMonth = taskFrequency === 'monthly' && $('#task-' + taskId + '-weekofmonth-modal').is(':checked') ? true : false;
-    
+
+            var isMonthlyDayOfMonth = taskFrequency === 'monthly' && $('#task-dayofmonth').is(':checked') ? true : false;
+            var isMonthlyWeekOfMonth = taskFrequency === 'monthly' && $('#task-weekofmonth').is(':checked') ? true : false;
+
             var taskRepeat = {};
-    
+
             if (isMonthlyDayOfMonth || isMonthlyWeekOfMonth) {
                 taskRepeat = {
                     'm': taskStartDate.getDay() === 1 ? true : false,
@@ -201,30 +210,30 @@ export function save(taskId, user) {
             }
             else {
                 taskRepeat = {
-                    'm': $('#task-' + taskId + '-repeat-m-modal').is(':checked') ? true : false,
-                    't': $('#task-' + taskId + '-repeat-t-modal').is(':checked') ? true : false,
-                    'w': $('#task-' + taskId + '-repeat-w-modal').is(':checked') ? true : false,
-                    'th': $('#task-' + taskId + '-repeat-th-modal').is(':checked') ? true : false,
-                    'f': $('#task-' + taskId + '-repeat-f-modal').is(':checked') ? true : false,
-                    's': $('#task-' + taskId + '-repeat-s-modal').is(':checked') ? true : false,
-                    'su': $('#task-' + taskId + '-repeat-su-modal').is(':checked') ? true : false
+                    'm': $('#task-repeat-m').is(':checked') ? true : false,
+                    't': $('#task-repeat-t').is(':checked') ? true : false,
+                    'w': $('#task-repeat-w').is(':checked') ? true : false,
+                    'th': $('#task-repeat-th').is(':checked') ? true : false,
+                    'f': $('#task-repeat-f').is(':checked') ? true : false,
+                    's': $('#task-repeat-s').is(':checked') ? true : false,
+                    'su': $('#task-repeat-su').is(':checked') ? true : false
                 };
             }
-    
+
             taskParameters['repeat'] = taskRepeat;
-    
-    
+
+
             var taskDaysOfMonth = [];
-    
+
             if (isMonthlyDayOfMonth) {
                 taskDaysOfMonth[0] = taskStartDate.getDate();
             }
-    
+
             taskParameters['daysOfMonth'] = taskDaysOfMonth;
-    
-    
+
+
             var taskWeeksOfMonth = [];
-    
+
             if (isMonthlyWeekOfMonth) {
                 if (taskStartDate.getDate() <= 7) {
                     taskWeeksOfMonth[0] = 0;
@@ -242,22 +251,22 @@ export function save(taskId, user) {
                     taskWeeksOfMonth[0] = 4;
                 }
             }
-            
+
             taskParameters['weeksOfMonth'] = taskWeeksOfMonth;
         }
-        else if (taskType === 'todo'){
-            var taskDate = new Date($('#task-' + taskId + '-date-modal').val() + 'T00:00:00');
+        else if (taskType === 'todo') {
+            var taskDate = new Date($('#task-date').val() + 'T00:00:00');
             taskParameters['date'] = taskDate;
         }
 
         var taskTags = [];
 
-        $('#modal-task input[type="checkbox"].task-tag-js:checked').each(function() {
+        $('#modal-task input[type="checkbox"].task-tag-js:checked').each(function () {
             taskTags.push($(this).val());
         });
 
         taskParameters['tags'] = taskTags;
-    
+
         try {
             $.ajax({
                 url: 'https://habitica.com/api/v3/tasks/' + (isNewTask ? 'user' : taskId),
@@ -272,27 +281,30 @@ export function save(taskId, user) {
                     xhr.setRequestHeader('x-api-key', user.token);
                 }
             })
-            .done(function (data) {
-                let message = 'Task successfully saved.';
-    
-                $('#modal-task .btn-task-edit-done-js').html('Saved! Updating page...');
-                $('#modal-task').modal('hide');
+                .done(function (data) {
+                    let message = 'Task successfully saved.';
 
-                Utils.updateLogs(taskText + ': ' + message);
-                Utils.updateToast('success', taskText, message);
-            })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                let message = 'Couldn\'t save ' + taskText + ': <br>' + jqXHR.status + ' Error';
-    
-                if ('responseJSON' in jqXHR) {
-                    if ('message' in jqXHR.responseJSON) {
-                        message += ' - ' + jqXHR.responseJSON.message;
+                    $('#modal-task').modal('hide');
+
+                    Utils.updateLogs(taskText + ': ' + message);
+                    Utils.updateToast('success', taskText, message);
+
+                    if (onComplete) {
+                        onComplete();
                     }
-                }
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    let message = 'Couldn\'t save ' + taskText + ': <br>' + jqXHR.status + ' Error';
 
-                Utils.updateLogs('Error: ' + message, true);
-                Utils.updateToast('error', 'Error', message);
-            });
+                    if ('responseJSON' in jqXHR) {
+                        if ('message' in jqXHR.responseJSON) {
+                            message += ' - ' + jqXHR.responseJSON.message;
+                        }
+                    }
+
+                    Utils.updateLogs('Error: ' + message, true);
+                    Utils.updateToast('error', 'Error', message);
+                });
         }
         catch (error) {
             $('#modal-task').modal('hide');
@@ -314,7 +326,7 @@ export function save(taskId, user) {
  * @param {User} user - The user the task belongs to
  * @see {@link https://habitica.com/apidoc/#api-Task-ScoreChecklistItem|Task - Score a checklist item}
  */
-export function scoreChecklistItem(checkbox, user) {
+export function scoreChecklistItem(checkbox, user, onComplete) {
     var taskId = checkbox.data('taskid');
     var itemTitle = checkbox.data('itemtitle');
     var itemId = checkbox.data('itemid');
@@ -331,24 +343,28 @@ export function scoreChecklistItem(checkbox, user) {
                 xhr.setRequestHeader('x-api-key', user.token);
             }
         })
-        .done(function (data) {      
-            // Cool, it worked! Let's be quiet about it though--it's just a
-            // checkbox. Updating a toast for this is a tad annoying to the
-            // user, I think.
-            Utils.updateLogs(data.data.text + ': Checklist item scored successfully');
-        })
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            let message = 'Couldn\'t score checklist item: <br>' + jqXHR.status + ' Error';
+            .done(function (data) {
+                // Cool, it worked! Let's be quiet about it though--it's just a
+                // checkbox. Updating a toast for this is a tad annoying to the
+                // user, I think.
+                Utils.updateLogs(data.data.text + ': Checklist item scored successfully');
 
-            if ('responseJSON' in jqXHR) {
-                if ('message' in jqXHR.responseJSON) {
-                    message += ' - ' + jqXHR.responseJSON.message;
+                if (onComplete) {
+                    onComplete();
                 }
-            }
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                let message = 'Couldn\'t score checklist item: <br>' + jqXHR.status + ' Error';
 
-            Utils.updateLogs('Error: ' + message, true);
-            Utils.updateToast('error', itemTitle, message);
-        });
+                if ('responseJSON' in jqXHR) {
+                    if ('message' in jqXHR.responseJSON) {
+                        message += ' - ' + jqXHR.responseJSON.message;
+                    }
+                }
+
+                Utils.updateLogs('Error: ' + message, true);
+                Utils.updateToast('error', itemTitle, message);
+            });
     }
     catch (error) {
         $('#modal-task').modal('hide');
@@ -356,5 +372,278 @@ export function scoreChecklistItem(checkbox, user) {
         var message = 'Couldn\'t score checklist item: <br>' + error.responseText;
         Utils.updateLogs('Error: ' + message, true);
         Utils.updateToast('error', itemTitle, message);
+    }
+}
+
+export function openModal(taskId, user) {
+    var task = null;
+    if (taskId === 'new') {
+        task = new Task({
+            id: taskId,
+            text: 'New Task',
+            type: 'daily',
+            priority: 1,
+            frequency: 'weekly',
+            repeat: {
+                'su': true,
+                'm': true,
+                't': true,
+                'w': true,
+                'th': true,
+                'f': true,
+                's': true
+            },
+            everyX: 1,
+            tags: []
+        }, user);
+        task.create();
+    }
+    else {
+        var matchingTasks = $.grep(user.tasks, function (e) { return e.id == taskId; });
+        if (matchingTasks.length === 1) {
+            task = new Task(matchingTasks[0], user);
+            task.create();
+        }
+    }
+    
+    if (task !== null) {
+        var isNewTask = task.id === 'new';
+
+        // Static changes here
+
+        $('#modal-task-label').html(isNewTask ? 'New Task ' : $(md.render(task.text.trim())).html());
+        $('#task-notes-static').html(md.render(task.notes.trim()));
+
+        $('#task-checklist-static').empty();
+        if (task.checklist != null) {
+            if (task.checklist.length > 0) {
+                $('#task-checklist-static').removeClass('d-none');
+                task.checklist.forEach(function (value) {
+                    $('#task-checklist-static').append(`
+                        <li>
+                            <div class="form-check">
+                                <input class="form-check-input task-checklist-item-js" type="checkbox" value="" id="checklist-${value.id}"${value.completed === true ? ' checked' : ''} data-taskid="${task.id}" data-itemtitle="${value.text}" data-itemid="${value.id}">
+                                <label class="form-check-label" for="checklist-${value.id}">${$(md.render(value.text.trim())).html()}</label>
+                            </div>
+                        </li>`);
+                });
+            }
+            else {
+                $('#task-checklist-static').addClass('d-none');
+            }
+        }
+        else {
+            $('#task-checklist-static').addClass('d-none');
+        }
+
+
+        var difficultyHtml = 'Invalid';
+
+        if (typeof task.priority === 'number') {
+            var difficultyStar = '&#9733;';
+            var difficultyContextClass = '';
+            var difficultyStars = '';
+            var difficultyName = '';
+
+            if (task.priority < 1) {
+                difficultyContextClass = 'difficulty1';
+                difficultyStars = difficultyStar;
+                difficultyName = 'Trivial';
+            }
+            else if (task.priority === 1) {
+                difficultyContextClass = 'difficulty2';
+                difficultyStars = difficultyStar + difficultyStar;
+                difficultyName = 'Easy';
+            }
+            else if (task.priority === 1.5) {
+                difficultyContextClass = 'difficulty3';
+                difficultyStars = difficultyStar + difficultyStar + difficultyStar;
+                difficultyName = 'Medium';
+            }
+            else if (task.priority >= 2) {
+                difficultyContextClass = 'difficulty4';
+                difficultyStars = difficultyStar + difficultyStar + difficultyStar + difficultyStar;
+                difficultyName = 'Hard';
+            }
+
+            if (difficultyContextClass != '') {
+                difficultyHtml = '<span class="badge badge-' + difficultyContextClass + '">' + difficultyStars + '</span> ' + difficultyName;
+            }
+        }
+
+        $('#task-difficulty-static').html(difficultyHtml);
+
+        var taskFrequency = task.frequencyFormatted();
+        if (taskFrequency != '') {
+            $('#task-frequency-static-container').removeClass('d-none');
+            $('#task-frequency-static').html(taskFrequency);
+        }
+        else {
+            $('#task-frequency-static-container').addClass('d-none');
+            $('#task-frequency-static').html('');
+        }
+
+        if (Object.keys(user.tags).length > 0 && task.tags != null && task.tags.length > 0) {
+            $('#task-tags-static').empty();
+            task.tags.forEach(function (value) {
+                $('#task-tags-static').append('<span class="badge badge-pill badge-light badge-tag">' + $(md.render(user.tags[value].trim())).html() + '</span> ');
+            });
+        }
+        else {
+            $('#task-tags-static').html('None');
+        }
+
+
+
+        // Editable changes here
+
+        $('#task-text').val(task.text ? task.text : '');
+        $('#task-type').val(task.type);
+        $('#task-notes').html(task.notes.trim());
+
+        $('#task-difficulty option:selected').prop('selected', false);
+        if (task.priority < 1) {
+            $('#task-difficulty option[value="0.1"]').prop('selected', true);
+        }
+        else if (task.priority === 1) {
+            $('#task-difficulty option[value="1"]').prop('selected', true);
+        }
+        else if (task.priority === 1.5) {
+            $('#task-difficulty option[value="1.5"]').prop('selected', true);
+        }
+        else if (task.priority >= 2) {
+            $('#task-difficulty option[value="2"]').prop('selected', true);
+        }
+
+        if (Object.keys(user.tags).length > 0) {
+            if ($('#task-tags-container').is(':empty')) {
+                Object.keys(user.tags).forEach(function (key) {
+                    $('#task-tags-container').append(`
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="form-check">
+                            <input class="form-check-input task-tag-js" type="checkbox" id="task-tag-${key}" value="${key}">
+                            <label class="form-check-label" for="task-tag-${key}">${$(md.render(user.tags[key].trim())).html()}</label>
+                        </div>
+                    </div>`);
+                });
+            }
+
+            $('.task-tag-js').prop('checked', false);
+
+            task.tags.forEach(function (value) {
+                $('#task-tag-' + value).prop('checked', true);
+            });
+        }
+
+        if (task.type === 'daily') {
+            $('#task-startdate-container').removeClass('d-none');
+            $('#task-startdate').val(task.startDate ? Utils.getDateKey(new Date(task.startDate)) : Utils.getDateKey(new Date()));
+
+            $('#task-date-container').addClass('d-none');
+            $('#task-date').val('');
+
+            $('#task-frequency-container').removeClass('d-none');
+            $('#task-frequency option:selected').prop('selected', false);
+            if (task.frequency === 'daily') {
+                $('#task-frequency option[value="daily"]').prop('selected', true);
+            }
+            else if (task.frequency === 'weekly') {
+                $('#task-frequency option[value="weekly"]').prop('selected', true);
+            }
+            else if (task.frequency === 'monthly') {
+                $('#task-frequency option[value="monthly"]').prop('selected', true);
+            }
+            else if (task.frequency === 'yearly') {
+                $('#task-frequency option[value="yearly"]').prop('selected', true);
+            }
+
+            $('#task-everyx-container').removeClass('d-none');
+            $('#task-everyx').val(task.everyX);
+            $('#task-everyx-addon').html(Utils.frequencyPlurals[task.frequency]);
+
+            $('#task-repeat-m, #task-repeat-t, #task-repeat-w, #task-repeat-th, #task-repeat-f, #task-repeat-s, #task-repeat-su').prop('checked', false);
+            if (task.frequency === 'weekly') {
+                $('#task-repeat-container').removeClass('d-none');
+
+                if (task.repeat['m'] === true) {
+                    $('#task-repeat-m').prop('checked', true);
+                }
+                if (task.repeat['t'] === true) {
+                    $('#task-repeat-t').prop('checked', true);
+                }
+                if (task.repeat['w'] === true) {
+                    $('#task-repeat-w').prop('checked', true);
+                }
+                if (task.repeat['th'] === true) {
+                    $('#task-repeat-th').prop('checked', true);
+                }
+                if (task.repeat['f'] === true) {
+                    $('#task-repeat-f').prop('checked', true);
+                }
+                if (task.repeat['s'] === true) {
+                    $('#task-repeat-s').prop('checked', true);
+                }
+                if (task.repeat['su'] === true) {
+                    $('#task-repeat-su').prop('checked', true);
+                }
+            }
+            else {
+                $('#task-repeat-container').addClass('d-none');
+            }
+
+            $('[name="task-dayofweekmonth"]').prop('checked', false);
+            if (task.frequency === 'monthly') {
+                $('#task-daysweeksofmonth-container').removeClass('d-none');
+                if (task.daysOfMonth && task.daysOfMonth.length > 0) {
+                    $('#task-dayofmonth').prop('checked', true);
+                }
+                if (task.weeksOfMonth && task.weeksOfMonth.length > 0) {
+                    $('#task-weekofmonth').prop('checked', true);
+                }
+            }
+            else {
+                $('#task-daysweeksofmonth-container').addClass('d-none');
+            }
+        }
+        else if (task.type === 'todo') {
+            $('#task-startdate-container').addClass('d-none');
+            $('#task-startdate').val('');
+
+            $('#task-date-container').removeClass('d-none');
+            $('#task-date').val(task.date ? Utils.getDateKey(new Date(task.date)) : Utils.getDateKey(new Date()));
+
+            $('#task-frequency-container').addClass('d-none');
+            $('#task-frequency option:selected').prop('selected', false);
+
+            $('#task-everyx-container').addClass('d-none');
+            $('#task-everyx').val('');
+
+            $('#task-repeat-container').addClass('d-none');
+            $('#task-repeat-m, #task-repeat-t, #task-repeat-w, #task-repeat-th, #task-repeat-f, #task-repeat-s, #task-repeat-su').prop('checked', false);
+
+            $('#task-daysweeksofmonth-container').addClass('d-none');
+            $('[name="task-dayofweekmonth"]').prop('checked', false);
+        }
+
+
+
+        // Button changes here
+
+        $('#task-complete, .btn-task-delete-js, .btn-task-save-js').data('taskid', task.id);
+        $('#task-complete, .btn-task-delete-js').data('tasktitle', task.text.trim());
+        $('.btn-task-save-js').data('new', isNewTask);
+        if (isNewTask) {
+            $('.btn-task-edit-cancel-js').addClass('d-none');
+        }
+        else {
+            $('.btn-task-edit-cancel-js').removeClass('d-none');
+        }
+
+        $('#modal-task').modal('show');
+    }
+    else {
+        var message = 'Couldn\'t find a task with ID ' + taskId + ', or that task ID wasn\'t unique';
+        Utils.updateLogs(message, true);
+        Utils.updateToast('error', 'Error', message);
     }
 }

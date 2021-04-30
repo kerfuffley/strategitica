@@ -78,7 +78,9 @@ export class User {
                     Utils.updateLogs(message);
                 }
 
-                onComplete();
+                if (onComplete) {
+                    onComplete();
+                }
             }, function (error) {
                 $('#strategitica-login-progress').addClass('d-none');
 
@@ -189,7 +191,9 @@ export class User {
                     Utils.updateLogs(message);
                     Utils.updateToast('success', 'Tavern Status', message);
 
-                    onComplete();
+                    if (onComplete) {
+                        onComplete();
+                    }
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
                     let message = 'Couldn\'t update tavern status: <br>' + jqXHR.status + ' Error';
