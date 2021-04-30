@@ -642,7 +642,7 @@ export function openModal(taskId, user) {
         $('#modal-task').modal('show');
     }
     else {
-        var message = 'Couldn\'t find a task with ID ' + taskId + ', or that task ID wasn\'t unique';
+        var message = 'Error opening task modal: Couldn\'t find a task with ID ' + taskId + ', or that task ID isn\'t unique';
         Utils.updateLogs(message, true);
         Utils.updateToast('error', 'Error', message);
     }

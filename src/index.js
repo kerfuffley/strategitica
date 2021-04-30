@@ -110,18 +110,9 @@ function loadUserStats() {
  *      b.  Start adding up the difficulty of each task to come up with a
  *          difficulty rating for the day.
  *      c.  Put each task into an array based on which time of day it is.
- *      d.  Generate some tooltip HTML associated with each task (see
- *          {@link Task.tooltipHtml}) and add that HTML string to an array.
- *          We'll be dealing with that info shortly.
- * 6.   Once we've looped through all the days, we'll simply loop through
- *      everything in the tooltip and modal HTML arrays and append each chunk
- *      of HTML to a node with a unique ID that includes the task ID. This is
- *      how the task in the calendar and its tooltip and modal will be
- *      associated with one another.
- * 7.   Finally, the calendar HTML is added to the DOM, and each of the tooltip
- *      and modal nodes get appended to a hidden node in the DOM as well. Now
- *      that the DOM knows about the calendar, we need to make sure the task
- *      badges in it are interactive.
+ * 6.   Finally, the calendar HTML is added to the DOM. Now that the DOM knows
+ *      about the calendar, we need to make sure the task badges in it are
+ *      interactive.
  * 
  * @todo Currently, future due dates are limited to whichever future due dates
  * the Habitica API provides, which seems to be the next ~6-7 due dates. I'm
@@ -256,7 +247,6 @@ function loadCalendar() {
     }
 
     var dayCounter = 0; // [5]
-    var tasksTooltipText = {}; // [5d]
 
     for (var i = 0; i <= calendarDaysLimit; i++) { // [5]
         var currentDay = new Date(today);
@@ -319,10 +309,6 @@ function loadCalendar() {
 
                     badgesHtml += value.badgeHtml(); // [5]
                     Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (morning): ' + task.text);
-
-                    if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
-                    }
                 });
 
                 dayTasks += '<div><small>Morning:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Morning tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -344,10 +330,6 @@ function loadCalendar() {
 
                     badgesHtml += value.badgeHtml(); // [5]
                     Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (afternoon): ' + task.text);
-
-                    if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
-                    }
                 });
 
                 dayTasks += '<div><small>Afternoon:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Afternoon tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -369,10 +351,6 @@ function loadCalendar() {
 
                     badgesHtml += value.badgeHtml(); // [5]
                     Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (evening): ' + task.text);
-
-                    if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
-                    }
                 });
 
                 dayTasks += '<div><small>Evening:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Evening tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -394,10 +372,6 @@ function loadCalendar() {
 
                     badgesHtml += value.badgeHtml(); // [5]
                     Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (whenever): ' + task.text);
-
-                    if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
-                    }
                 });
 
                 if (morningTasks.length > 0 || afternoonTasks.length > 0 || eveningTasks.length > 0) {
@@ -431,20 +405,13 @@ function loadCalendar() {
         dayCounter = dayCounter + 1; // [5]
     }
 
-    let interactiveDescriptions = ''; // [6]
-
-    Object.keys(tasksTooltipText).forEach(function (key) {
-        interactiveDescriptions += '<div id="task-' + key + '-tooltip">' + tasksTooltipText[key] + '</div>'; // [5d], [6]
-    });
-
-    $('#strategitica-calendar').html(output); // [5], [7]
-    $('#strategitica-descriptions').html(interactiveDescriptions); // [5d], [6], [7]
+    $('#strategitica-calendar').html(output); // [5], [6]
 
     $('.badge-title-js').each(function() {
         $(this).html($(md.render($(this).html())).html());
     });
 
-    $('.badge-task-js').on('click', function (e) { // [7]
+    $('.badge-task-js').on('click', function (e) { // [6]
         TaskActions.openModal($(this).data('taskid'), user);
         TaskActions.editCancel();
     });
@@ -492,7 +459,18 @@ $('body').popover({
     placement: 'auto',
     template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>',
     content: function () {
-        return $('#task-' + $(this).data('taskid') + '-tooltip').html();
+        var taskId = $(this).data('taskid');
+        var task = null;
+        var matchingTasks = $.grep(user.tasks, function (e) { return e.id == taskId; });
+        if (matchingTasks.length === 1) {
+            task = new Task(matchingTasks[0], user);
+            task.create();
+            return $(task.tooltipHtml());
+        }
+        else {
+            Utils.updateLogs('Error generating tooltip: Couldn\'t find a task with ID ' + taskId + ', or that task ID isn\'t unique', true);
+            return $('<div>No task info found</div>');
+        }
     }
 });
 
