@@ -73,7 +73,8 @@ export class User {
                          Experience: ${user.exp} / ${user.expToNextLevel}<br>
                          MP: ${user.mp} / ${user.mpMax}<br>
                          Resting in the tavern: ${user.isSleeping}<br>
-                         Day start: ${user.dayStart}`;
+                         Day start: ${user.dayStart}<br>
+                         Tags: ${Object.values(user.tags)}`;
                     Utils.updateLogs(message);
                 }
 

@@ -178,10 +178,20 @@ function loadCalendar() {
             var taskDates = task.dates(calendarDaysLimit); // [3]
     
             if (taskDates.length > 0) { // [3]
+                var taskTags = '';
+                if (task.tags.length > 0) {
+                    task.tags.forEach(function (value) {
+                        taskTags += (value !== task.tags[0] ? ', ' : '') + user.tags[value];
+                    });
+                }
+                else {
+                    taskTags = 'none';
+                }
+
                 var taskInfo = `We'll be looking at ${task.text} now; here's some info about it: <br>
                 ID: ${task.id}<br>
                 Type: ${task.type}<br>
-                Tags: ${task.tags}<br>
+                Tags: ${taskTags}<br>
                 Notes: ${task.notes}<br>
                 Date: ${task.date}<br>
                 Priority: ${task.priority}<br>
@@ -209,7 +219,7 @@ function loadCalendar() {
                     if (datesWithTasksDue[date].indexOf(task.id) === -1) {
                         datesWithTasksDue[date][task.id] = task; // [2], [3]
     
-                        Utils.updateLogs(task.text + ' added to ' + date);
+                        Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
                     }
                 }
             }
@@ -282,6 +292,7 @@ function loadCalendar() {
 
                 if (task.timeOfDay === 'morning') {
                     morningTasks.push(task); // [5c]
+                    
                 }
                 else if (task.timeOfDay === 'afternoon') {
                     afternoonTasks.push(task); // [5c]
@@ -308,16 +319,15 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = value.tooltipHtml(); // [5d]
-                    var modalHtml = value.modalHtml(); // [5d]
                     badgesHtml += value.badgeHtml(); // [5]
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (morning): ' + task.text);
 
                     if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = tooltipHtml; // [5d]
+                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
                     }
 
                     if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = modalHtml; // [5d]
+                        tasksModalText[value.id] = value.modalHtml(); // [5d]
                     }
                 });
 
@@ -338,16 +348,15 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = value.tooltipHtml(); // [5d]
-                    var modalHtml = value.modalHtml(); // [5d]
                     badgesHtml += value.badgeHtml(); // [5]
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (afternoon): ' + task.text);
 
                     if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = tooltipHtml; // [5d]
+                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
                     }
 
                     if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = modalHtml; // [5d]
+                        tasksModalText[value.id] = value.modalHtml(); // [5d]
                     }
                 });
 
@@ -368,16 +377,15 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = value.tooltipHtml(); // [5d]
-                    var modalHtml = value.modalHtml(); // [5d]
                     badgesHtml += value.badgeHtml(); // [5]
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (evening): ' + task.text);
 
                     if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = tooltipHtml; // [5d]
+                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
                     }
 
                     if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = modalHtml; // [5d]
+                        tasksModalText[value.id] = value.modalHtml(); // [5d]
                     }
                 });
 
@@ -398,16 +406,15 @@ function loadCalendar() {
                         timeOfDayDurationAsterisk = true;
                     }
 
-                    var tooltipHtml = value.tooltipHtml(); // [5d]
-                    var modalHtml = value.modalHtml(); // [5d]
                     badgesHtml += value.badgeHtml(); // [5]
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (whenever): ' + task.text);
 
                     if (!(value.id in tasksTooltipText)) {
-                        tasksTooltipText[value.id] = tooltipHtml; // [5d]
+                        tasksTooltipText[value.id] = value.tooltipHtml(); // [5d]
                     }
 
                     if (!(value.id in tasksModalText)) {
-                        tasksModalText[value.id] = modalHtml; // [5d]
+                        tasksModalText[value.id] = value.modalHtml(); // [5d]
                     }
                 });
 

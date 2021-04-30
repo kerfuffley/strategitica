@@ -627,6 +627,8 @@ export class Task {
      */
     badgeHtml() {
         var task = this;
+        Utils.updateLogs('Generating calendar item HTML for ' + task.text);
+
         var badgeDifficultyClass = 'difficulty1';
         var badgeDifficultyDescription = 'Trivial';
         if (typeof task.priority === 'number') {
@@ -688,6 +690,8 @@ export class Task {
      */
     modalHtml() {
         var task = this;
+        Utils.updateLogs('Generating modal contents for ' + task.text);
+
         var userTags = this.user.tags;
         var isNewTask = task.id === 'new';
 
@@ -883,6 +887,8 @@ export class Task {
      */
     tooltipHtml() {
         var task = this;
+        Utils.updateLogs('Generating tooltip contents for ' + task.text);
+
         var tooltipHtml = '';
 
         tooltipHtml += '<h3 class="popover-header">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</h3>';
