@@ -35,7 +35,7 @@ export class User {
         var user = this;
 
         try {
-            $.when(this.getTags(), this.getTasks(), this.getUserInfo()).then(function (tags, tasks, userInfo) {
+            $.when(this.getTags(), this.getDailies(), this.getTodos(), this.getUserInfo()).then(function (tags, dailies, todos, userInfo) {
                 Utils.updateLogs('Data loaded successfully!');
 
                 let userTagNames = {};
@@ -48,7 +48,13 @@ export class User {
 
                 user.tags = userTagNames;
 
-                user.tasks = tasks[0].data;
+                var allTasks = {};
+
+                [].concat(dailies[0].data, todos[0].data).forEach(function(item, index, myArray) {
+                    allTasks[item.id] = item;
+                });
+
+                user.tasks = allTasks;
 
                 if (userInfo[0].data !== null) {
                     user.name = userInfo[0].data.auth.local.username;
@@ -122,7 +128,7 @@ export class User {
         });
     }
 
-    getTasks() {
+    getDailies() {
         var userId = this.id;
         var apiToken = this.token;
 
@@ -133,6 +139,31 @@ export class User {
             dataType: 'json',
             contentType: 'application/json',
             cache: false,
+            data: {
+                type: 'dailys'
+            },
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('x-client', Utils.appClient);
+                xhr.setRequestHeader('x-api-user', userId);
+                xhr.setRequestHeader('x-api-key', apiToken);
+            }
+        });
+    }
+
+    getTodos() {
+        var userId = this.id;
+        var apiToken = this.token;
+
+        return $.ajax({
+            async: true,
+            url: 'https://habitica.com/api/v3/tasks/user',
+            type: 'GET',
+            dataType: 'json',
+            contentType: 'application/json',
+            cache: false,
+            data: {
+                type: 'todos'
+            },
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('x-client', Utils.appClient);
                 xhr.setRequestHeader('x-api-user', userId);

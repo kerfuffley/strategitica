@@ -111,8 +111,8 @@ export function formatDuration(durationInMinutes) {
 
 export function updateToast(type, title, body, toastToHide) {
     var el = $('#strategitica-toast-' + type);
-    el.find('.toast-title-js').html(title);
-    el.find('.toast-body-js').html(body);
+    el.find('.toast-title-js').html(title.replace('<', '&lt;').replace('>', '&gt;'));
+    el.find('.toast-body-js').html(body.replace('<', '&lt;').replace('>', '&gt;'));
 
     el.toast('show');
 

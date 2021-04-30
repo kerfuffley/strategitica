@@ -95,7 +95,7 @@ export class Task {
 
     hasTimeOfDayTag(timeOfDay) {
         var task = this;
-        var userTagNames = this.user.tags;
+        var userTagNames = task.user.tags;
 
         if (Object.keys(userTagNames).length > 0) {
             var timeOfDayTagId = '';

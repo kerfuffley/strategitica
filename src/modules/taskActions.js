@@ -7,64 +7,76 @@ import md from 'habitica-markdown';
  * Uses the Habitica API to complete a task.
  * 
  * @param {string} taskId - The task ID
- * @param {string} taskTitle - The task's title
  * @param {User} user - The user the task belongs to
  * @see {@link https://habitica.com/apidoc/#api-Task-ScoreTask|Task - Score a task}
  */
-export function complete(taskId, taskTitle, user, onComplete) {
-    try {
-        $.ajax({
-            url: 'https://habitica.com/api/v3/tasks/' + taskId + '/score/up',
-            type: 'POST',
-            dataType: 'json',
-            contentType: 'application/json',
-            cache: false,
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-client', Utils.appClient);
-                xhr.setRequestHeader('x-api-user', user.id);
-                xhr.setRequestHeader('x-api-key', user.token);
-            }
-        })
-            .done(function (data) {
-                let result = data.data;
+export function complete(taskId, user, onComplete) {
+    var task = null;
+    if (taskId in user.tasks) {
+        task = new Task(user.tasks[taskId], user);
+        task.create();
+    }
 
-                let message = 'Task completed!';
-
-                if ('_tmp' in result) {
-                    if ('drop' in result._tmp) {
-                        if ('dialog' in result._tmp.drop) {
-                            message += '<br>' + result._tmp.drop.dialog;
-                        }
-                    }
-                }
-
-                $('#modal-task').modal('hide');
-
-                Utils.updateLogs(taskTitle + ': ' + message);
-                Utils.updateToast('success', taskTitle, message);
-
-                if (onComplete) {
-                    onComplete();
+    if (task !== null) {
+        try {
+            $.ajax({
+                url: 'https://habitica.com/api/v3/tasks/' + taskId + '/score/up',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                cache: false,
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('x-client', Utils.appClient);
+                    xhr.setRequestHeader('x-api-user', user.id);
+                    xhr.setRequestHeader('x-api-key', user.token);
                 }
             })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                let message = 'Couldn\'t complete ' + taskTitle + ': <br>' + jqXHR.status + ' Error';
+                .done(function (data) {
+                    let result = data.data;
 
-                if ('responseJSON' in jqXHR) {
-                    if ('message' in jqXHR.responseJSON) {
-                        message += ' - ' + jqXHR.responseJSON.message;
+                    let message = 'Task completed!';
+
+                    if ('_tmp' in result) {
+                        if ('drop' in result._tmp) {
+                            if ('dialog' in result._tmp.drop) {
+                                message += '<br>' + result._tmp.drop.dialog;
+                            }
+                        }
                     }
-                }
 
-                Utils.updateLogs('Error: ' + message, true);
-                Utils.updateToast('error', 'Error', message);
-            });
+                    $('#modal-task').modal('hide');
+
+                    Utils.updateLogs(task.text + ': ' + message);
+                    Utils.updateToast('success', task.text, message);
+
+                    if (onComplete) {
+                        onComplete();
+                    }
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    let message = 'Couldn\'t complete ' + task.text + ': <br>' + jqXHR.status + ' Error';
+
+                    if ('responseJSON' in jqXHR) {
+                        if ('message' in jqXHR.responseJSON) {
+                            message += ' - ' + jqXHR.responseJSON.message;
+                        }
+                    }
+
+                    Utils.updateLogs('Error: ' + message, true);
+                    Utils.updateToast('error', 'Error', message);
+                });
+        }
+        catch (error) {
+            $('#modal-task').modal('hide');
+
+            var message = 'Couldn\'t complete ' + task.text + ': <br>' + error.responseText;
+            Utils.updateLogs('Error: ' + message, true);
+            Utils.updateToast('error', 'Error', message);
+        }
     }
-    catch (error) {
-        $('#modal-task').modal('hide');
-
-        var message = 'Couldn\'t complete ' + taskTitle + ': <br>' + error.responseText;
-        Utils.updateLogs('Error: ' + message, true);
+    else {
+        var message = 'Error completing task: Couldn\'t find a task with ID ' + taskId + ', or that task ID isn\'t unique';
+        Utils.updateLogs(message, true);
         Utils.updateToast('error', 'Error', message);
     }
 }
@@ -95,58 +107,69 @@ export function editCancel() {
  * Uses the Habitica API to delete a task.
  * 
  * @param {string} taskId - The task ID
- * @param {string} taskTitle - The task's title
  * @param {User} user - The user the task belongs to
  * @see {@link https://habitica.com/apidoc/#api-Task-DeleteTask|Task - Delete a task}
  */
-export function remove(taskId, taskTitle, user, onComplete) {
+export function remove(taskId, user, onComplete) {
     if (confirm('Are you sure you want to delete this task?')) {
-        try {
-            $.ajax({
-                url: 'https://habitica.com/api/v3/tasks/' + taskId,
-                method: 'DELETE',
-                dataType: 'json',
-                contentType: 'application/json',
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader('x-client', Utils.appClient);
-                    xhr.setRequestHeader('x-api-user', user.id);
-                    xhr.setRequestHeader('x-api-key', user.token);
-                }
-            })
-                .done(function (data) {
-                    let message = 'Task deleted successfully.';
+        var task = null;
+        if (taskId in user.tasks) {
+            task = new Task(user.tasks[taskId], user);
+            task.create();
+        }
 
-                    $('#modal-task .btn-task-delete-js').html('Deleted. Updating page...');
-                    $('#modal-task').modal('hide');
-
-                    Utils.updateLogs(taskTitle + ': ' + message);
-                    Utils.updateToast('success', taskTitle, message);
-
-                    if (onComplete) {
-                        onComplete();
+        if (task !== null) {
+            try {
+                $.ajax({
+                    url: 'https://habitica.com/api/v3/tasks/' + taskId,
+                    method: 'DELETE',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('x-client', Utils.appClient);
+                        xhr.setRequestHeader('x-api-user', user.id);
+                        xhr.setRequestHeader('x-api-key', user.token);
                     }
                 })
-                .fail(function (jqXHR, textStatus, errorThrown) {
-                    let message = 'Couldn\'t delete task: <br>' + jqXHR.status + ' Error';
-
-                    if ('responseJSON' in jqXHR) {
-                        if ('message' in jqXHR.responseJSON) {
-                            message += ' - ' + jqXHR.responseJSON.message;
+                    .done(function (data) {
+                        let message = 'Task deleted successfully.';
+    
+                        $('#modal-task').modal('hide');
+    
+                        Utils.updateLogs(task.text + ': ' + message);
+                        Utils.updateToast('success', task.text, message);
+    
+                        if (onComplete) {
+                            onComplete();
                         }
-                    }
-
-                    $('#modal-task').modal('hide');
-
-                    Utils.updateLogs('Error: ' + message, true);
-                    Utils.updateToast('error', taskTitle, message);
-                });
+                    })
+                    .fail(function (jqXHR, textStatus, errorThrown) {
+                        let message = 'Couldn\'t delete task: <br>' + jqXHR.status + ' Error';
+    
+                        if ('responseJSON' in jqXHR) {
+                            if ('message' in jqXHR.responseJSON) {
+                                message += ' - ' + jqXHR.responseJSON.message;
+                            }
+                        }
+    
+                        $('#modal-task').modal('hide');
+    
+                        Utils.updateLogs('Error: ' + message, true);
+                        Utils.updateToast('error', task.text, message);
+                    });
+            }
+            catch (error) {
+                $('#modal-task').modal('hide');
+    
+                var message = 'Couldn\'t delete task: <br>' + error.responseText;
+                Utils.updateLogs('Error: ' + message, true);
+                Utils.updateToast('error', task.text, message);
+            }
         }
-        catch (error) {
-            $('#modal-task').modal('hide');
-
-            var message = 'Couldn\'t delete task: <br>' + error.responseText;
-            Utils.updateLogs('Error: ' + message, true);
-            Utils.updateToast('error', taskTitle, message);
+        else {
+            var message = 'Error deleting task: Couldn\'t find a task with ID ' + taskId + ', or that task ID isn\'t unique';
+            Utils.updateLogs(message, true);
+            Utils.updateToast('error', 'Error', message);
         }
     }
 }
@@ -399,13 +422,12 @@ export function openModal(taskId, user) {
         task.create();
     }
     else {
-        var matchingTasks = $.grep(user.tasks, function (e) { return e.id == taskId; });
-        if (matchingTasks.length === 1) {
-            task = new Task(matchingTasks[0], user);
+        if (taskId in user.tasks) {
+            task = new Task(user.tasks[taskId], user);
             task.create();
         }
     }
-    
+
     if (task !== null) {
         var isNewTask = task.id === 'new';
 
@@ -629,14 +651,13 @@ export function openModal(taskId, user) {
 
         // Button changes here
 
-        $('#task-complete, .btn-task-delete-js, .btn-task-save-js').data('taskid', task.id);
-        $('#task-complete, .btn-task-delete-js').data('tasktitle', task.text.trim());
-        $('.btn-task-save-js').data('new', isNewTask);
+        $('#task-complete, #task-delete, #task-save').data('taskid', task.id);
+        $('#task-save').data('new', isNewTask);
         if (isNewTask) {
-            $('.btn-task-edit-cancel-js').addClass('d-none');
+            $('#task-edit-cancel').addClass('d-none');
         }
         else {
-            $('.btn-task-edit-cancel-js').removeClass('d-none');
+            $('#task-edit-cancel').removeClass('d-none');
         }
 
         $('#modal-task').modal('show');

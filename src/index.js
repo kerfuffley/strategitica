@@ -21,7 +21,7 @@ if (ID != '') {
 
 let user = null;
 
-$('#strategitica-login').on('submit', function(event) {
+$('#strategitica-login').on('submit', function (event) {
     event.preventDefault();
 
     ID = $('#user-id').val();
@@ -29,7 +29,7 @@ $('#strategitica-login').on('submit', function(event) {
 
     $('#strategitica-login-progress').removeClass('d-none');
 
-    loadAll(false, function() {
+    loadAll(false, function () {
         $('#modal-login').modal('hide');
     });
 });
@@ -43,7 +43,7 @@ function loadAll(showMessage, onComplete) {
     }
 
     user = new User(ID, token);
-    user.create(function() {
+    user.create(function () {
         loadUserStats();
         loadCalendar();
         loadTavernStatus();
@@ -51,7 +51,7 @@ function loadAll(showMessage, onComplete) {
         if (onComplete) {
             onComplete();
         }
-        
+
         if (showMessage) {
             Utils.updateLogs('Data refreshed successfully');
             Utils.updateToast('success', 'Data refreshed', 'Thanks for waiting!', 'info');
@@ -113,12 +113,6 @@ function loadUserStats() {
  * 6.   Finally, the calendar HTML is added to the DOM. Now that the DOM knows
  *      about the calendar, we need to make sure the task badges in it are
  *      interactive.
- * 
- * @todo Currently, future due dates are limited to whichever future due dates
- * the Habitica API provides, which seems to be the next ~6-7 due dates. I'm
- * hoping I can come up with something to get due dates beyond that because,
- * for tasks that occur very often, it sucks to only be able to accurately see
- * a week or so into the future.
  */
 function loadCalendar() {
     let tasks = user.tasks;
@@ -160,25 +154,24 @@ function loadCalendar() {
     ];
     let datesWithTasksDue = {}; // [2]
 
-    for (var i = 0; i < tasks.length; i++) { // [3]
-        if (tasks[i].type !== 'habit' && tasks[i].type !== 'reward') {
-            var task = new Task(tasks[i], user);
-            task.create();
-    
-            var taskDates = task.dates(calendarDaysLimit); // [3]
-    
-            if (taskDates.length > 0) { // [3]
-                var taskTags = '';
-                if (task.tags.length > 0) {
-                    task.tags.forEach(function (value) {
-                        taskTags += (value !== task.tags[0] ? ', ' : '') + user.tags[value];
-                    });
-                }
-                else {
-                    taskTags = 'none';
-                }
+    Object.keys(tasks).forEach((key, index) => { // [3]
+        var task = new Task(tasks[key], user);
+        task.create();
 
-                var taskInfo = `We'll be looking at ${task.text} now; here's some info about it: <br>
+        var taskDates = task.dates(calendarDaysLimit); // [3]
+
+        if (taskDates.length > 0) { // [3]
+            var taskTags = '';
+            if (task.tags.length > 0) {
+                task.tags.forEach(function (value) {
+                    taskTags += (value !== task.tags[0] ? ', ' : '') + user.tags[value];
+                });
+            }
+            else {
+                taskTags = 'none';
+            }
+
+            var taskInfo = `We'll be looking at ${task.text} now; here's some info about it: <br>
                 ID: ${task.id}<br>
                 Type: ${task.type}<br>
                 Tags: ${taskTags}<br>
@@ -198,26 +191,25 @@ function loadCalendar() {
                 Checklist: ${task.checklist}<br>
                 Value: ${task.value}<br>
                 Time of Day: ${task.timeOfDay}`;
-                Utils.updateLogs(taskInfo);
-    
-                for (var j = 0; j < taskDates.length; j++) {
-                    var date = taskDates[j];
-                    if (!(date in datesWithTasksDue)) {
-                        datesWithTasksDue[date] = []; // [2]
-                    }
-    
-                    if (datesWithTasksDue[date].indexOf(task.id) === -1) {
-                        datesWithTasksDue[date][task.id] = task; // [2], [3]
-    
-                        Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
-                    }
+            Utils.updateLogs(taskInfo);
+
+            for (var j = 0; j < taskDates.length; j++) {
+                var date = taskDates[j];
+                if (!(date in datesWithTasksDue)) {
+                    datesWithTasksDue[date] = []; // [2]
+                }
+
+                if (datesWithTasksDue[date].indexOf(task.id) === -1) {
+                    datesWithTasksDue[date][task.id] = task; // [2], [3]
+
+                    Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
                 }
             }
-            else {
-                Utils.updateLogs('No applicable dates found for ' + task.text + ' - it won\'t be added to the calendar');
-            }
         }
-    }
+        else {
+            Utils.updateLogs('No applicable dates found for ' + task.text + ' - it won\'t be added to the calendar');
+        }
+    });
 
     var weekLabels = '<div class="calendar-week">'; // [4]
 
@@ -280,7 +272,7 @@ function loadCalendar() {
 
                 if (task.timeOfDay === 'morning') {
                     morningTasks.push(task); // [5c]
-                    
+
                 }
                 else if (task.timeOfDay === 'afternoon') {
                     afternoonTasks.push(task); // [5c]
@@ -308,7 +300,7 @@ function loadCalendar() {
                     }
 
                     badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (morning): ' + task.text);
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (morning): ' + value.text);
                 });
 
                 dayTasks += '<div><small>Morning:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Morning tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -329,7 +321,7 @@ function loadCalendar() {
                     }
 
                     badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (afternoon): ' + task.text);
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (afternoon): ' + value.text);
                 });
 
                 dayTasks += '<div><small>Afternoon:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Afternoon tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -350,7 +342,7 @@ function loadCalendar() {
                     }
 
                     badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (evening): ' + task.text);
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (evening): ' + value.text);
                 });
 
                 dayTasks += '<div><small>Evening:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Evening tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
@@ -371,7 +363,7 @@ function loadCalendar() {
                     }
 
                     badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (whenever): ' + task.text);
+                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (whenever): ' + value.text);
                 });
 
                 if (morningTasks.length > 0 || afternoonTasks.length > 0 || eveningTasks.length > 0) {
@@ -407,7 +399,7 @@ function loadCalendar() {
 
     $('#strategitica-calendar').html(output); // [5], [6]
 
-    $('.badge-title-js').each(function() {
+    $('.badge-title-js').each(function () {
         $(this).html($(md.render($(this).html())).html());
     });
 
@@ -461,9 +453,8 @@ $('body').popover({
     content: function () {
         var taskId = $(this).data('taskid');
         var task = null;
-        var matchingTasks = $.grep(user.tasks, function (e) { return e.id == taskId; });
-        if (matchingTasks.length === 1) {
-            task = new Task(matchingTasks[0], user);
+        if (taskId in user.tasks) {
+            task = new Task(user.tasks[taskId], user);
             task.create();
             return $(task.tooltipHtml());
         }
@@ -518,7 +509,7 @@ $('#modal-task').on('show.bs.modal', function (e) {
     $('.badge-task-js').popover('hide');
 });
 
-$('#strategitica-logs-clear').on('click', function() {
+$('#strategitica-logs-clear').on('click', function () {
     $('.strategitica-logs-js').empty();
 });
 
@@ -526,13 +517,13 @@ $('#strategitica-logs-clear').on('click', function() {
 // --- Start task change handlers ---
 
 $(document).on('change', '.task-checklist-item-js', function (e) {
-    TaskActions.scoreChecklistItem($(this), user, function() {
+    TaskActions.scoreChecklistItem($(this), user, function () {
         loadAll(false);
     });
 });
 
 $(document).on('click', '#task-complete', function (e) {
-    TaskActions.complete($(this).data('taskid'), $(this).data('tasktitle'), user, function() {
+    TaskActions.complete($(this).data('taskid'), user, function () {
         loadAll(false);
     });
 });;
@@ -541,18 +532,18 @@ $(document).on('click', '#task-edit', function (e) {
     TaskActions.edit();
 });
 
-$(document).on('click', '.btn-task-edit-cancel-js', function (e) {
+$(document).on('click', '#task-edit-cancel', function (e) {
     TaskActions.editCancel();
 });
 
 $(document).on('click', '#task-delete', function (e) {
-    TaskActions.remove($(this).data('taskid'), $(this).data('tasktitle'), user, function() {
+    TaskActions.remove($(this).data('taskid'), user, function () {
         loadAll(false);
     });
 });
 
-$(document).on('click', '.btn-task-save-js', function (e) {
-    TaskActions.save($(this).data('taskid'), user, function() {
+$(document).on('click', '#task-save', function (e) {
+    TaskActions.save($(this).data('taskid'), user, function () {
         loadAll(false);
     });
 });
