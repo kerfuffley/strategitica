@@ -627,7 +627,6 @@ export class Task {
      */
     badgeHtml() {
         var task = this;
-        Utils.updateLogs('Generating calendar item HTML for ' + task.text);
 
         var badgeDifficultyClass = 'difficulty1';
         var badgeDifficultyDescription = 'Trivial';

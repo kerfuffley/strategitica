@@ -29,6 +29,7 @@ $('#strategitica-login').on('submit', function (event) {
 
     $('#strategitica-login-progress').removeClass('d-none');
 
+    loadCalendar();
     loadAll(false, null, function () {
         $('#modal-login').modal('hide');
     });
@@ -45,7 +46,7 @@ function loadAll(showMessage, taskId, onComplete) {
     user = new User(ID, token);
     user.create(function () {
         loadUserStats();
-        loadCalendar(taskId);
+        loadTasks(taskId);
         loadTavernStatus();
 
         if (onComplete) {
@@ -76,28 +77,158 @@ function loadUserStats() {
 }
 
 /**
+ * This basically generates an empty calendar for as many days in the future as
+ * Strategitica is supposed to show (see {@link calendarDaysLimit}). The more
+ * complex version is this:
+ * 1.   Provide some basic info, including but not limited to what today is,
+ *      what's the first day of the current month, what the name of each day of
+ *      the week is, etc.
+ * 2.   Start coming up with the calendar HTML. Regardless of what day it is
+ *      today, we need to start off the calendar with the current month,
+ *      including past days up to yesterday, because a calendar that begins
+ *      mid-month looks weird. Those days also need to be styled differently so
+ *      it's clear to the user that they're days in the past.
+ * 3.   Go through each date from today onward and add HTML for each day. We'll
+ *      keep doing this until we've reached {@link calendarDaysLimit}. As we're
+ *      looping through the days, we'll also check if each day is at the
+ *      beginning or end of the week or month so that things can get aligned
+ *      properly, and so that month and week labels can get added at the start
+ *      of each new month.
+ * 4.   Finally, the calendar HTML is added to the DOM.
+ */
+function loadCalendar() {
+    let output = '';
+
+    let today = new Date(); // [1]
+    today.setHours(0, 0, 0, 0);
+    let thisMonth = today.getMonth(); // [1]
+    let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [1]
+    let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
+    let weekDayNames = [ // [1]
+        ['Sunday', 'Sun'],
+        ['Monday', 'Mon'],
+        ['Tuesday', 'Tue'],
+        ['Wednesday', 'Wed'],
+        ['Thursday', 'Thu'],
+        ['Friday', 'Fri'],
+        ['Saturday', 'Sat']
+    ];
+
+    var weekLabels = '<div class="calendar-week">'; // [2]
+
+    weekDayNames.forEach(function (value) { // [1], [2]
+        weekLabels += '<div class="calendar-label-week">';
+        weekLabels += '<span class="d-none d-lg-inline">' + value[0] + '</span>';
+        weekLabels += '<span class="d-none d-md-block d-lg-none">' + value[1] + '</span>';
+        weekLabels += '</div>';
+    });
+
+    weekLabels += '</div>';
+
+    output += `
+    <div class="calendar-label-month">${Utils.monthNames[today.getMonth()][0]} ${today.getFullYear()}</div>
+    <div class="clearfix"></div>
+    ${weekLabels}`; // [2]
+
+    for (var i = 1; i < today.getDate(); i++) { // [2]
+        var thisDate = new Date(today.getFullYear(), today.getMonth(), i);
+
+        if (i === 1 || thisDate.getDay() === 0) { // if this day is the first of the month OR if this day is Sunday
+            output += '<div class="calendar-week">';
+        }
+
+        output += `
+        <div class="calendar-day calendar-day-past${(i === 1 ? ' calendar-day-offset' + firstOfMonthDayOfWeek : '')} d-none d-md-block">
+            <div class="p-1">
+                <span class="calendar-label-day">${i}</span>
+            </div>
+        </div>`; // [2]
+
+        if (thisDate.getDay() === 6) { // if this day is Saturday
+            output += '</div><!-- end .calendar-week -->';
+        }
+    }
+
+    var dayCounter = 0; // [3]
+
+    for (var i = 0; i <= Utils.calendarDaysLimit; i++) { // [3]
+        var currentDay = new Date(today);
+        currentDay.setDate(currentDay.getDate() + dayCounter);
+        currentDay.setHours(0, 0, 0, 0);
+
+        if (currentDay.getMonth() != thisMonth) { // [3]
+            output += `
+            <div class="calendar-label-month">${Utils.monthNames[currentDay.getMonth()][0]} ${currentDay.getFullYear()}</div>
+            ${weekLabels}`; // [3]
+
+            thisMonth = currentDay.getMonth(); // [3]
+        }
+
+        if (currentDay.getDay() === 0 || currentDay.getDate() === 1) { // [3]
+            output += '<div class="calendar-week">';
+        }
+
+        output += `
+        <div class="calendar-day${(dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '')}" id="calendar-day-${Utils.getDateKey(currentDay)}">
+            <div class="p-1">
+                <span class="calendar-label-day">
+                    <span class="d-md-none">${weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1]}</span> 
+                    ${currentDay.getDate()}
+                    <span class="badge badge-pill badge-light float-right calendar-day-duration-js d-none" title="Total tasks duration">Unknown</span>
+                </span>
+                <div class="calendar-day-morning-js d-none">
+                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
+                        <small>Morning:</small>
+                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Morning tasks duration">Unknown</span>
+                    </div>
+                    <div class="calendar-day-tasks-js"></div>
+                </div>
+                <div class="calendar-day-afternoon-js d-none">
+                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
+                        <small>Afternoon:</small>
+                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Afternoon tasks duration">Unknown</span>
+                    </div>
+                    <div class="calendar-day-tasks-js"></div>
+                </div>
+                <div class="calendar-day-evening-js d-none">
+                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
+                        <small>Evening:</small>
+                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Evening tasks duration">Unknown</span>
+                    </div>
+                    <div class="calendar-day-tasks-js"></div>
+                </div>
+                <div class="calendar-day-whenever-js d-none">
+                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
+                        <small>Whenever:</small>
+                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Whenever tasks duration">Unknown</span>
+                    </div>
+                    <div class="calendar-day-tasks-js"></div>
+                </div>
+            </div>
+        </div>`; // [3]
+
+        if (currentDay.getDay() === 6 || currentDay.getDate() === Utils.getLastDayOfMonth(currentDay.getFullYear(), currentDay.getMonth()) || dayCounter === Utils.calendarDaysLimit) { // [3]
+            output += '</div><!-- end .calendar-week -->';
+        }
+
+        dayCounter = dayCounter + 1; // [3]
+    }
+
+    $('#strategitica-calendar').html(output); // [4]
+}
+
+/**
  * This basically gets the user's task list via the Habitica API and sorts it
  * so it can be put in calendar format. The more complex version is this:
- * 1.   Provide some basic info, including but not limited to what the name of
- *      each day of the week is, and how many days into the future this
- *      calendar should be limited to.
- * 2.   Create an object, which will contain a bunch of arrays. Essentially,
+ * 1.   Create an object, which will contain a bunch of arrays. Essentially,
  *      we're creating a list of dates that have tasks due, and each of those
  *      dates will be tied to that date's list of tasks. Also, each item in
  *      that list of tasks will be tied to a task ID. So, the index of the
  *      first array "tier" will represent a date, and the index of the second
- *      array "tier" will be a task ID. It's important for the task ID to be
- *      there because we'll use it later on to ensure a task doesn't appear
- *      twice in the same day (don't ask me how or why this happens, I just
- *      know that it can).
- * 3.   Go through each task's list of dates, if they have one, and add it to
+ *      array "tier" will be a task ID.
+ * 2.   Go through each task's list of dates, if they have one, and add it to
  *      the array for each of its dates.
- * 4.   Start coming up with the calendar HTML. Regardless of what day it is
- *      today, we need to start off the calendar with the current month,
- *      including past days up to yesterday, because a calendar that begins
- *      mid-month looks weird. Those days need to be styled to look different
- *      so it's clear to the user that they're days in the past.
- * 5.   Go through each date from today onward and, if the current date exists
+ * 3.   Go through each date from today onward and, if the current date exists
  *      in the list of dates with tasks due, add HTML for each task to a
  *      container for that day. We'll keep doing this until we've reached the
  *      day limit for the calendar. Each task will have some data-* attributes
@@ -110,39 +241,21 @@ function loadUserStats() {
  *      b.  Start adding up the difficulty of each task to come up with a
  *          difficulty rating for the day.
  *      c.  Put each task into an array based on which time of day it is.
- * 6.   Finally, the calendar HTML is added to the DOM. Now that the DOM knows
- *      about the calendar, we need to make sure the task badges in it are
- *      interactive.
+ * 4.   Now all the tasks are added to the calendar, we need to make sure each
+ *      task's badge is interactive.
  */
-function loadCalendar(taskId) {
+function loadTasks(taskId) {
     if (!taskId) {
         var tasks = user.tasks;
-        let output = '';
+        let datesWithTasksDue = {}; // [1]
 
-        let today = new Date(); // [1]
-        today.setHours(0, 0, 0, 0);
-        let thisMonth = today.getMonth(); // [1]
-        let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [1]
-        let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
-
-        let weekDayNames = [ // [1]
-            ['Sunday', 'Sun'],
-            ['Monday', 'Mon'],
-            ['Tuesday', 'Tue'],
-            ['Wednesday', 'Wed'],
-            ['Thursday', 'Thu'],
-            ['Friday', 'Fri'],
-            ['Saturday', 'Sat']
-        ];
-        let datesWithTasksDue = {}; // [2]
-
-        Object.keys(tasks).forEach((key, index) => { // [3]
-            var task = new Task(tasks[key], user);
+        Object.keys(tasks).forEach((id, index) => { // [2]
+            var task = new Task(tasks[id], user);
             task.create();
 
-            var taskDates = task.dates(Utils.calendarDaysLimit); // [3]
+            var taskDates = task.dates(Utils.calendarDaysLimit); // [2]
 
-            if (taskDates.length > 0) { // [3]
+            if (taskDates.length > 0) { // [2]
                 var taskTags = '';
                 if (task.tags.length > 0) {
                     task.tags.forEach(function (value) {
@@ -178,11 +291,11 @@ function loadCalendar(taskId) {
                 for (var j = 0; j < taskDates.length; j++) {
                     var date = taskDates[j];
                     if (!(date in datesWithTasksDue)) {
-                        datesWithTasksDue[date] = []; // [2]
+                        datesWithTasksDue[date] = []; // [1]
                     }
 
                     if (datesWithTasksDue[date].indexOf(task.id) === -1) {
-                        datesWithTasksDue[date][task.id] = task; // [2], [3]
+                        datesWithTasksDue[date][task.id] = task; // [1], [2]
 
                         Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
                     }
@@ -193,196 +306,101 @@ function loadCalendar(taskId) {
             }
         });
 
-        var weekLabels = '<div class="calendar-week">'; // [4]
-
-        weekDayNames.forEach(function (value) { // [1], [4]
-            weekLabels += '<div class="calendar-label-week">';
-            weekLabels += '<span class="d-none d-lg-inline">' + value[0] + '</span>';
-            weekLabels += '<span class="d-none d-md-block d-lg-none">' + value[1] + '</span>';
-            weekLabels += '</div>';
-        });
-
-        weekLabels += '</div>';
-
-        output += '<div class="calendar-label-month">' + Utils.monthNames[today.getMonth()][0] + ' ' + today.getFullYear() + '</div><div class="clearfix"></div>' + weekLabels; // [4]
-
-        for (var i = 1; i < today.getDate(); i++) { // [4]
-            var thisDate = new Date(today.getFullYear(), today.getMonth(), i);
-
-            if (i === 1 || thisDate.getDay() === 0) { // if this day is the first of the month OR if this day is Sunday
-                output += '<div class="calendar-week">';
-            }
-
-            output += '<div class="calendar-day calendar-day-past' + (i === 1 ? ' calendar-day-offset' + firstOfMonthDayOfWeek : '') + ' d-none d-md-block"><div class="p-1"><span class="calendar-label-day">' + i + '</span></div></div>'; // [4]
-
-            if (thisDate.getDay() === 6) { // if this day is Saturday
-                output += '</div><!-- end .calendar-week -->';
-            }
-        }
-
-        var dayCounter = 0; // [5]
-
-        for (var i = 0; i <= Utils.calendarDaysLimit; i++) { // [5]
-            var currentDay = new Date(today);
-            currentDay.setDate(currentDay.getDate() + dayCounter);
-            currentDay.setHours(0, 0, 0, 0);
-
-            if (currentDay.getMonth() != thisMonth) { // [5a]
-                output += '<div class="calendar-label-month">' + Utils.monthNames[currentDay.getMonth()][0] + ' ' + currentDay.getFullYear() + '</div>' + weekLabels; // [5a]
-
-                thisMonth = currentDay.getMonth(); // [5a]
-            }
-
-            var currentDayKey = Utils.getDateKey(currentDay); // [2]
-            var dayTasks = '';
-            var difficultyRating = 0; // [5b]
+        Object.keys(datesWithTasksDue).forEach((date, index) => { // [1], [3]
+            var currentDayCalendarId = '#calendar-day-' + date;
+            var difficultyRating = 0; // [3b]
             var dayDuration = 0;
             var dayDurationAsterisk = false;
+            var timesOfDay = {
+                'morning': [],
+                'afternoon': [],
+                'evening': [],
+                'whenever': []
+            }; // [3c]
 
-            if (currentDayKey in datesWithTasksDue) { // [2], [5]
-                var morningTasks = []; // [5c]
-                var afternoonTasks = []; // [5c]
-                var eveningTasks = []; // [5c]
-                var otherTasks = []; // [5c]
+            $(currentDayCalendarId + ' .calendar-day-tasks-js:not(:empty)').empty();
 
-                Object.keys(datesWithTasksDue[currentDayKey]).forEach(function (key) { // [2], [5]
-                    var task = datesWithTasksDue[currentDayKey][key]; // [2]
+            Object.keys(datesWithTasksDue[date]).forEach(function (key) { // [1], [3]
+                var task = datesWithTasksDue[date][key]; // [1]
 
-                    if (typeof task.priority === 'number') {
-                        difficultyRating += task.priority; // [5b]
-                    }
+                if (typeof task.priority === 'number') {
+                    difficultyRating += task.priority; // [3b]
+                }
 
-                    if (task.timeOfDay === 'morning') {
-                        morningTasks.push(task); // [5c]
+                if (task.timeOfDay === 'morning') {
+                    timesOfDay['morning'].push(task); // [3c]
+                }
+                else if (task.timeOfDay === 'afternoon') {
+                    timesOfDay['afternoon'].push(task); // [3c]
+                }
+                else if (task.timeOfDay === 'evening') {
+                    timesOfDay['evening'].push(task); // [3c]
+                }
+                else {
+                    timesOfDay['whenever'].push(task); // [3c]
+                }
+            });
 
-                    }
-                    else if (task.timeOfDay === 'afternoon') {
-                        afternoonTasks.push(task); // [5c]
-                    }
-                    else if (task.timeOfDay === 'evening') {
-                        eveningTasks.push(task); // [5c]
+            Object.keys(timesOfDay).forEach((key, index) => {
+                if (timesOfDay[key].length > 0) { // [3c]
+                    var badgesHtml = '';
+                    var timeOfDayDuration = 0;
+                    var timeOfDayDurationAsterisk = false;
+
+                    $(currentDayCalendarId + ' .calendar-day-' + key + '-js').removeClass('d-none');
+
+                    timesOfDay[key].forEach(function (value) {
+                        var taskDuration = value.duration();
+                        dayDuration += taskDuration;
+                        timeOfDayDuration += taskDuration;
+                        if (taskDuration === 0) {
+                            dayDurationAsterisk = true;
+                            timeOfDayDurationAsterisk = true;
+                        }
+
+                        badgesHtml += value.badgeHtml(); // [3]
+                        Utils.updateLogs('Task added to calendar on ' + date + ' (' + key + '): ' + value.text);
+                    });
+
+                    var timeOfDayDurationEl = $(currentDayCalendarId + ' .calendar-day-' + key + '-js .calendar-timeofday-duration-js');
+                    if (timeOfDayDuration > 0) {
+                        timeOfDayDurationEl.html(Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : ''));
+                        timeOfDayDurationEl.attr('title', key + ' tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : ''));
+                        timeOfDayDurationEl.removeClass('d-none');
                     }
                     else {
-                        otherTasks.push(task); // [5c]
-                    }
-                });
-
-                if (morningTasks.length > 0) { // [5c]
-                    var badgesHtml = '';
-                    var timeOfDayDuration = 0;
-                    var timeOfDayDurationAsterisk = false;
-
-                    morningTasks.forEach(function (value) {
-                        var taskDuration = value.duration();
-                        dayDuration += taskDuration;
-                        timeOfDayDuration += taskDuration;
-                        if (taskDuration === 0) {
-                            dayDurationAsterisk = true;
-                            timeOfDayDurationAsterisk = true;
-                        }
-
-                        badgesHtml += value.badgeHtml(); // [5]
-                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (morning): ' + value.text);
-                    });
-
-                    dayTasks += '<div><small>Morning:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Morning tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
-                }
-
-                if (afternoonTasks.length > 0) { // [5c]
-                    var badgesHtml = '';
-                    var timeOfDayDuration = 0;
-                    var timeOfDayDurationAsterisk = false;
-
-                    afternoonTasks.forEach(function (value) {
-                        var taskDuration = value.duration();
-                        dayDuration += taskDuration;
-                        timeOfDayDuration += taskDuration;
-                        if (taskDuration === 0) {
-                            dayDurationAsterisk = true;
-                            timeOfDayDurationAsterisk = true;
-                        }
-
-                        badgesHtml += value.badgeHtml(); // [5]
-                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (afternoon): ' + value.text);
-                    });
-
-                    dayTasks += '<div><small>Afternoon:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Afternoon tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
-                }
-
-                if (eveningTasks.length > 0) { // [5c]
-                    var badgesHtml = '';
-                    var timeOfDayDuration = 0;
-                    var timeOfDayDurationAsterisk = false;
-
-                    eveningTasks.forEach(function (value) {
-                        var taskDuration = value.duration();
-                        dayDuration += taskDuration;
-                        timeOfDayDuration += taskDuration;
-                        if (taskDuration === 0) {
-                            dayDurationAsterisk = true;
-                            timeOfDayDurationAsterisk = true;
-                        }
-
-                        badgesHtml += value.badgeHtml(); // [5]
-                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (evening): ' + value.text);
-                    });
-
-                    dayTasks += '<div><small>Evening:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Evening tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
-                }
-
-                if (otherTasks.length > 0) { // [5c]
-                    var badgesHtml = '';
-                    var timeOfDayDuration = 0;
-                    var timeOfDayDurationAsterisk = false;
-
-                    otherTasks.forEach(function (value) {
-                        var taskDuration = value.duration();
-                        dayDuration += taskDuration;
-                        timeOfDayDuration += taskDuration;
-                        if (taskDuration === 0) {
-                            dayDurationAsterisk = true;
-                            timeOfDayDurationAsterisk = true;
-                        }
-
-                        badgesHtml += value.badgeHtml(); // [5]
-                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (whenever): ' + value.text);
-                    });
-
-                    if (morningTasks.length > 0 || afternoonTasks.length > 0 || eveningTasks.length > 0) {
-                        dayTasks += '<div><small>Whenever:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Other tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>';
+                        timeOfDayDurationEl.addClass('d-none');
                     }
 
-                    dayTasks += badgesHtml;
+                    $(currentDayCalendarId + ' .calendar-day-' + key + '-js .calendar-day-tasks-js').html(badgesHtml);
+
+                    if (key === 'whenever') {
+                        if (timesOfDay['morning'].length > 0 || timesOfDay['afternoon'].length > 0 || timesOfDay['evening'].length > 0) {
+                            $(currentDayCalendarId + ' .calendar-day-whenever-js .calendar-label-timeofday-js').removeClass('d-none');
+                        }
+                        else {
+                            $(currentDayCalendarId + ' .calendar-day-whenever-js .calendar-label-timeofday-js').addClass('d-none');
+                        }
+                    }
                 }
+                else {
+                    $(currentDayCalendarId + ' .calendar-day-' + key + '-js').addClass('d-none');
+                }
+            });
+
+            var currentDayDurationEl = $(currentDayCalendarId + ' .calendar-day-duration-js');
+            if (dayDuration > 0) {
+                currentDayDurationEl.html(Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : ''));
+                currentDayDurationEl.attr('title', 'Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : ''));
+                currentDayDurationEl.removeClass('d-none');
             }
-
-            if (currentDay.getDay() === 0 || currentDay.getDate() === 1) { // [5a]
-                output += '<div class="calendar-week">';
+            else {
+                currentDayDurationEl.addClass('d-none');
             }
-
-            output += '<div class="calendar-day' + (dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '') + '" id="calendar-day-' + Utils.getDateKey(currentDay) + '">' +
-                '<div class="p-1">' +
-                '<span class="calendar-label-day">' +
-                '<span class="d-md-none">' + weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1] + '</span> ' +
-                currentDay.getDate() +
-                //' <span class="badge badge-pill badge-light float-right" title="Difficulty rating"><i class="fas fa-star" aria-hidden="true"></i>' + (difficultyRating % 1 === 0 ? difficultyRating : difficultyRating.toFixed(1)) + '</span>' + 
-                ' <span class="badge badge-pill badge-light float-right" title="Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : '') + '</span>' +
-                '</span>' +
-                dayTasks +
-                '</div>' +
-                '</div>'; // [5]
-
-            if (currentDay.getDay() === 6 || currentDay.getDate() === Utils.getLastDayOfMonth(currentDay.getFullYear(), currentDay.getMonth()) || dayCounter === Utils.calendarDaysLimit) { // [5a]
-                output += '</div><!-- end .calendar-week -->';
-            }
-
-            dayCounter = dayCounter + 1; // [5]
-        }
-
-        $('#strategitica-calendar').html(output); // [5], [6]
+        });
     }
     else {
-        if ($('#strategitica-calendar').not(':empty') && taskId in user.tasks) {
+        if (taskId in user.tasks) {
             var task = new Task(user.tasks[taskId], user);
             task.create();
 
@@ -392,13 +410,13 @@ function loadCalendar(taskId) {
 
             for (var i = 0; i < taskDates.length; i++) {
                 var date = taskDates[i];
-                $('#calendar-day-' + date).append(task.badgeHtml());                
+                $('#calendar-day-' + date).append(task.badgeHtml());
                 Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
             }
         }
     }
 
-    $('.badge-task-js').on('click', function (e) { // [6]
+    $('.badge-task-js').on('click', function (e) { // [4]
         TaskActions.openModal($(this).data('taskid'), user);
         TaskActions.editCancel();
     });
@@ -511,7 +529,7 @@ $('#strategitica-logs-clear').on('click', function () {
 // --- Start task change handlers ---
 
 $(document).on('change', '.task-checklist-item-js', function (e) {
-    TaskActions.scoreChecklistItem($(this), user, function() {
+    TaskActions.scoreChecklistItem($(this), user, function () {
         loadAll(false);
     });
 });
