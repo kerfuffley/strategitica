@@ -505,7 +505,7 @@ export function openModal(taskId, user) {
             $('#task-frequency-static').html('');
         }
 
-        if (Object.keys(user.tags).length > 0 && task.tags != null && task.tags.length > 0) {
+        if (Object.keys(user.tags).length > 0 && task.tags !== null && task.tags.length > 0) {
             $('#task-tags-static').empty();
             task.tags.forEach(function (value) {
                 $('#task-tags-static').append('<span class="badge badge-pill badge-light badge-tag">' + $(md.render(user.tags[value].trim())).html() + '</span> ');

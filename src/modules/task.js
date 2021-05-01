@@ -681,7 +681,7 @@ export class Task {
 
         var taskDuration = task.duration();
 
-        return '<button type="button" class="badge badge-task badge-task-js badge-' + badgeDifficultyClass + ' badge-' + badgeValueClass + '" data-taskid="' + task.id + '"><span class="badge-title badge-title-js">' + task.text.trim().replace('<', '&lt;').replace('>', '&gt;') + '</span><span class="sr-only">(Task value: ' + badgeValueDescription + '; Task difficulty: ' + badgeDifficultyDescription + ')</span>' + (taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : '') + '</button>';
+        return '<button type="button" class="badge badge-task badge-task-js badge-' + badgeDifficultyClass + ' badge-' + badgeValueClass + '" data-taskid="' + task.id + '"><span class="badge-title badge-title-js">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</span><span class="sr-only">(Task value: ' + badgeValueDescription + '; Task difficulty: ' + badgeDifficultyDescription + ')</span>' + (taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : '') + '</button>';
     }
 
     /**

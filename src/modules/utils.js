@@ -40,6 +40,27 @@ export function getUrlParameter(name) {
 
 export const showLogs = getUrlParameter('logs') === 'true';
 
+let calendarDaysLimitFromParam = parseInt(getUrlParameter('days'));
+let calendarDaysLimitMax = 180;
+let calendarDaysLimitTemp = 90; // [1]
+
+if (!isNaN(calendarDaysLimitFromParam)) {
+    if (calendarDaysLimitFromParam > calendarDaysLimitMax) {
+        updateLogs('Custom days limit (' + calendarDaysLimitFromParam + ') exceeds the maximum allowed (' + calendarDaysLimitMax + '); the default days limit will be used (' + calendarDaysLimitTemp + ')');
+    }
+    else {
+        if (calendarDaysLimitFromParam < 0) {
+            updateLogs('Custom days limit (' + calendarDaysLimitFromParam + ') cannot be less than zero; the default days limit will be used (' + calendarDaysLimitTemp + ')');
+        }
+        else {
+            updateLogs('Custom days limit recognized (' + calendarDaysLimitFromParam + ')');
+            calendarDaysLimitTemp = calendarDaysLimitFromParam; // [1]
+        }
+    }
+}
+
+export const calendarDaysLimit = calendarDaysLimitTemp;
+
 /**
  * You can't just output a Date variable in JS and expect it to look readable,
  * and for debugging purposes, I want things to be readable. So this is here to

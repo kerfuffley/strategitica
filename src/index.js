@@ -29,7 +29,7 @@ $('#strategitica-login').on('submit', function (event) {
 
     $('#strategitica-login-progress').removeClass('d-none');
 
-    loadAll(false, function () {
+    loadAll(false, null, function () {
         $('#modal-login').modal('hide');
     });
 });
@@ -37,7 +37,7 @@ $('#strategitica-login').on('submit', function (event) {
 /**
  * Get the user's data and put their info into the page.
  */
-function loadAll(showMessage, onComplete) {
+function loadAll(showMessage, taskId, onComplete) {
     if (showMessage) {
         Utils.updateToast('info', 'Refreshing', 'Hang on a sec...');
     }
@@ -45,7 +45,7 @@ function loadAll(showMessage, onComplete) {
     user = new User(ID, token);
     user.create(function () {
         loadUserStats();
-        loadCalendar();
+        loadCalendar(taskId);
         loadTavernStatus();
 
         if (onComplete) {
@@ -114,294 +114,289 @@ function loadUserStats() {
  *      about the calendar, we need to make sure the task badges in it are
  *      interactive.
  */
-function loadCalendar() {
-    let tasks = user.tasks;
-    let output = '';
+function loadCalendar(taskId) {
+    if (!taskId) {
+        var tasks = user.tasks;
+        let output = '';
 
-    let today = new Date(); // [1]
-    today.setHours(0, 0, 0, 0);
-    let thisMonth = today.getMonth(); // [1]
-    let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [1]
-    let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
+        let today = new Date(); // [1]
+        today.setHours(0, 0, 0, 0);
+        let thisMonth = today.getMonth(); // [1]
+        let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [1]
+        let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
 
-    let calendarDaysLimitFromParam = parseInt(Utils.getUrlParameter('days'));
-    let calendarDaysLimitMax = 180;
-    let calendarDaysLimit = 90; // [1]
+        let weekDayNames = [ // [1]
+            ['Sunday', 'Sun'],
+            ['Monday', 'Mon'],
+            ['Tuesday', 'Tue'],
+            ['Wednesday', 'Wed'],
+            ['Thursday', 'Thu'],
+            ['Friday', 'Fri'],
+            ['Saturday', 'Sat']
+        ];
+        let datesWithTasksDue = {}; // [2]
 
-    if (!isNaN(calendarDaysLimitFromParam)) {
-        if (calendarDaysLimitFromParam > calendarDaysLimitMax) {
-            Utils.updateLogs('Custom days limit (' + calendarDaysLimitFromParam + ') exceeds the maximum allowed (' + calendarDaysLimitMax + '); the default days limit will be used (' + calendarDaysLimit + ')');
-        }
-        else {
-            if (calendarDaysLimitFromParam < 0) {
-                Utils.updateLogs('Custom days limit (' + calendarDaysLimitFromParam + ') cannot be less than zero; the default days limit will be used (' + calendarDaysLimit + ')');
-            }
-            else {
-                Utils.updateLogs('Custom days limit recognized (' + calendarDaysLimitFromParam + ')');
-                calendarDaysLimit = calendarDaysLimitFromParam; // [1]
-            }
-        }
-    }
+        Object.keys(tasks).forEach((key, index) => { // [3]
+            var task = new Task(tasks[key], user);
+            task.create();
 
-    let weekDayNames = [ // [1]
-        ['Sunday', 'Sun'],
-        ['Monday', 'Mon'],
-        ['Tuesday', 'Tue'],
-        ['Wednesday', 'Wed'],
-        ['Thursday', 'Thu'],
-        ['Friday', 'Fri'],
-        ['Saturday', 'Sat']
-    ];
-    let datesWithTasksDue = {}; // [2]
+            var taskDates = task.dates(Utils.calendarDaysLimit); // [3]
 
-    Object.keys(tasks).forEach((key, index) => { // [3]
-        var task = new Task(tasks[key], user);
-        task.create();
-
-        var taskDates = task.dates(calendarDaysLimit); // [3]
-
-        if (taskDates.length > 0) { // [3]
-            var taskTags = '';
-            if (task.tags.length > 0) {
-                task.tags.forEach(function (value) {
-                    taskTags += (value !== task.tags[0] ? ', ' : '') + user.tags[value];
-                });
-            }
-            else {
-                taskTags = 'none';
-            }
-
-            var taskInfo = `We'll be looking at ${task.text} now; here's some info about it: <br>
-                ID: ${task.id}<br>
-                Type: ${task.type}<br>
-                Tags: ${taskTags}<br>
-                Notes: ${task.notes}<br>
-                Date: ${task.date}<br>
-                Priority: ${task.priority}<br>
-                Reminders: ${task.reminders}<br>
-                Frequency: ${task.frequency}<br>
-                Repeat: ${task.repeat}<br>
-                Every X: ${task.everyX}<br>
-                Days of Month: ${task.daysOfMonth}<br>
-                Weeks of Month: ${task.weeksOfMonth}<br>
-                Start Date: ${task.startDate}<br>
-                Completed: ${task.completed}<br>
-                Is Due: ${task.isDue}<br>
-                Next Due: ${task.nextDue}<br>
-                Checklist: ${task.checklist}<br>
-                Value: ${task.value}<br>
-                Time of Day: ${task.timeOfDay}`;
-            Utils.updateLogs(taskInfo);
-
-            for (var j = 0; j < taskDates.length; j++) {
-                var date = taskDates[j];
-                if (!(date in datesWithTasksDue)) {
-                    datesWithTasksDue[date] = []; // [2]
-                }
-
-                if (datesWithTasksDue[date].indexOf(task.id) === -1) {
-                    datesWithTasksDue[date][task.id] = task; // [2], [3]
-
-                    Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
-                }
-            }
-        }
-        else {
-            Utils.updateLogs('No applicable dates found for ' + task.text + ' - it won\'t be added to the calendar');
-        }
-    });
-
-    var weekLabels = '<div class="calendar-week">'; // [4]
-
-    weekDayNames.forEach(function (value) { // [1], [4]
-        weekLabels += '<div class="calendar-label-week">';
-        weekLabels += '<span class="d-none d-lg-inline">' + value[0] + '</span>';
-        weekLabels += '<span class="d-none d-md-block d-lg-none">' + value[1] + '</span>';
-        weekLabels += '</div>';
-    });
-
-    weekLabels += '</div>';
-
-    output += '<div class="calendar-label-month">' + Utils.monthNames[today.getMonth()][0] + ' ' + today.getFullYear() + '</div><div class="clearfix"></div>' + weekLabels; // [4]
-
-    for (var i = 1; i < today.getDate(); i++) { // [4]
-        var thisDate = new Date(today.getFullYear(), today.getMonth(), i);
-
-        if (i === 1 || thisDate.getDay() === 0) { // if this day is the first of the month OR if this day is Sunday
-            output += '<div class="calendar-week">';
-        }
-
-        output += '<div class="calendar-day calendar-day-past' + (i === 1 ? ' calendar-day-offset' + firstOfMonthDayOfWeek : '') + ' d-none d-md-block"><div class="p-1"><span class="calendar-label-day">' + i + '</span></div></div>'; // [4]
-
-        if (thisDate.getDay() === 6) { // if this day is Saturday
-            output += '</div><!-- end .calendar-week -->';
-        }
-    }
-
-    var dayCounter = 0; // [5]
-
-    for (var i = 0; i <= calendarDaysLimit; i++) { // [5]
-        var currentDay = new Date(today);
-        currentDay.setDate(currentDay.getDate() + dayCounter);
-        currentDay.setHours(0, 0, 0, 0);
-
-        if (currentDay.getMonth() != thisMonth) { // [5a]
-            output += '<div class="calendar-label-month">' + Utils.monthNames[currentDay.getMonth()][0] + ' ' + currentDay.getFullYear() + '</div>' + weekLabels; // [5a]
-
-            thisMonth = currentDay.getMonth(); // [5a]
-        }
-
-        var currentDayKey = Utils.getDateKey(currentDay); // [2]
-        var dayTasks = '';
-        var difficultyRating = 0; // [5b]
-        var dayDuration = 0;
-        var dayDurationAsterisk = false;
-
-        if (currentDayKey in datesWithTasksDue) { // [2], [5]
-            var morningTasks = []; // [5c]
-            var afternoonTasks = []; // [5c]
-            var eveningTasks = []; // [5c]
-            var otherTasks = []; // [5c]
-
-            Object.keys(datesWithTasksDue[currentDayKey]).forEach(function (key) { // [2], [5]
-                var task = datesWithTasksDue[currentDayKey][key]; // [2]
-
-                if (typeof task.priority === 'number') {
-                    difficultyRating += task.priority; // [5b]
-                }
-
-                if (task.timeOfDay === 'morning') {
-                    morningTasks.push(task); // [5c]
-
-                }
-                else if (task.timeOfDay === 'afternoon') {
-                    afternoonTasks.push(task); // [5c]
-                }
-                else if (task.timeOfDay === 'evening') {
-                    eveningTasks.push(task); // [5c]
+            if (taskDates.length > 0) { // [3]
+                var taskTags = '';
+                if (task.tags.length > 0) {
+                    task.tags.forEach(function (value) {
+                        taskTags += (value !== task.tags[0] ? ', ' : '') + user.tags[value];
+                    });
                 }
                 else {
-                    otherTasks.push(task); // [5c]
-                }
-            });
-
-            if (morningTasks.length > 0) { // [5c]
-                var badgesHtml = '';
-                var timeOfDayDuration = 0;
-                var timeOfDayDurationAsterisk = false;
-
-                morningTasks.forEach(function (value) {
-                    var taskDuration = value.duration();
-                    dayDuration += taskDuration;
-                    timeOfDayDuration += taskDuration;
-                    if (taskDuration === 0) {
-                        dayDurationAsterisk = true;
-                        timeOfDayDurationAsterisk = true;
-                    }
-
-                    badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (morning): ' + value.text);
-                });
-
-                dayTasks += '<div><small>Morning:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Morning tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
-            }
-
-            if (afternoonTasks.length > 0) { // [5c]
-                var badgesHtml = '';
-                var timeOfDayDuration = 0;
-                var timeOfDayDurationAsterisk = false;
-
-                afternoonTasks.forEach(function (value) {
-                    var taskDuration = value.duration();
-                    dayDuration += taskDuration;
-                    timeOfDayDuration += taskDuration;
-                    if (taskDuration === 0) {
-                        dayDurationAsterisk = true;
-                        timeOfDayDurationAsterisk = true;
-                    }
-
-                    badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (afternoon): ' + value.text);
-                });
-
-                dayTasks += '<div><small>Afternoon:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Afternoon tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
-            }
-
-            if (eveningTasks.length > 0) { // [5c]
-                var badgesHtml = '';
-                var timeOfDayDuration = 0;
-                var timeOfDayDurationAsterisk = false;
-
-                eveningTasks.forEach(function (value) {
-                    var taskDuration = value.duration();
-                    dayDuration += taskDuration;
-                    timeOfDayDuration += taskDuration;
-                    if (taskDuration === 0) {
-                        dayDurationAsterisk = true;
-                        timeOfDayDurationAsterisk = true;
-                    }
-
-                    badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (evening): ' + value.text);
-                });
-
-                dayTasks += '<div><small>Evening:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Evening tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
-            }
-
-            if (otherTasks.length > 0) { // [5c]
-                var badgesHtml = '';
-                var timeOfDayDuration = 0;
-                var timeOfDayDurationAsterisk = false;
-
-                otherTasks.forEach(function (value) {
-                    var taskDuration = value.duration();
-                    dayDuration += taskDuration;
-                    timeOfDayDuration += taskDuration;
-                    if (taskDuration === 0) {
-                        dayDurationAsterisk = true;
-                        timeOfDayDurationAsterisk = true;
-                    }
-
-                    badgesHtml += value.badgeHtml(); // [5]
-                    Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (whenever): ' + value.text);
-                });
-
-                if (morningTasks.length > 0 || afternoonTasks.length > 0 || eveningTasks.length > 0) {
-                    dayTasks += '<div><small>Whenever:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Other tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>';
+                    taskTags = 'none';
                 }
 
-                dayTasks += badgesHtml;
+                var taskInfo = `We'll be looking at ${task.text} now; here's some info about it: <br>
+                    ID: ${task.id}<br>
+                    Type: ${task.type}<br>
+                    Tags: ${taskTags}<br>
+                    Notes: ${task.notes}<br>
+                    Date: ${task.date}<br>
+                    Priority: ${task.priority}<br>
+                    Reminders: ${task.reminders}<br>
+                    Frequency: ${task.frequency}<br>
+                    Repeat: ${task.repeat}<br>
+                    Every X: ${task.everyX}<br>
+                    Days of Month: ${task.daysOfMonth}<br>
+                    Weeks of Month: ${task.weeksOfMonth}<br>
+                    Start Date: ${task.startDate}<br>
+                    Completed: ${task.completed}<br>
+                    Is Due: ${task.isDue}<br>
+                    Next Due: ${task.nextDue}<br>
+                    Checklist: ${task.checklist}<br>
+                    Value: ${task.value}<br>
+                    Time of Day: ${task.timeOfDay}`;
+                Utils.updateLogs(taskInfo);
+
+                for (var j = 0; j < taskDates.length; j++) {
+                    var date = taskDates[j];
+                    if (!(date in datesWithTasksDue)) {
+                        datesWithTasksDue[date] = []; // [2]
+                    }
+
+                    if (datesWithTasksDue[date].indexOf(task.id) === -1) {
+                        datesWithTasksDue[date][task.id] = task; // [2], [3]
+
+                        Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
+                    }
+                }
+            }
+            else {
+                Utils.updateLogs('No applicable dates found for ' + task.text + ' - it won\'t be added to the calendar');
+            }
+        });
+
+        var weekLabels = '<div class="calendar-week">'; // [4]
+
+        weekDayNames.forEach(function (value) { // [1], [4]
+            weekLabels += '<div class="calendar-label-week">';
+            weekLabels += '<span class="d-none d-lg-inline">' + value[0] + '</span>';
+            weekLabels += '<span class="d-none d-md-block d-lg-none">' + value[1] + '</span>';
+            weekLabels += '</div>';
+        });
+
+        weekLabels += '</div>';
+
+        output += '<div class="calendar-label-month">' + Utils.monthNames[today.getMonth()][0] + ' ' + today.getFullYear() + '</div><div class="clearfix"></div>' + weekLabels; // [4]
+
+        for (var i = 1; i < today.getDate(); i++) { // [4]
+            var thisDate = new Date(today.getFullYear(), today.getMonth(), i);
+
+            if (i === 1 || thisDate.getDay() === 0) { // if this day is the first of the month OR if this day is Sunday
+                output += '<div class="calendar-week">';
+            }
+
+            output += '<div class="calendar-day calendar-day-past' + (i === 1 ? ' calendar-day-offset' + firstOfMonthDayOfWeek : '') + ' d-none d-md-block"><div class="p-1"><span class="calendar-label-day">' + i + '</span></div></div>'; // [4]
+
+            if (thisDate.getDay() === 6) { // if this day is Saturday
+                output += '</div><!-- end .calendar-week -->';
             }
         }
 
-        if (currentDay.getDay() === 0 || currentDay.getDate() === 1) { // [5a]
-            output += '<div class="calendar-week">';
+        var dayCounter = 0; // [5]
+
+        for (var i = 0; i <= Utils.calendarDaysLimit; i++) { // [5]
+            var currentDay = new Date(today);
+            currentDay.setDate(currentDay.getDate() + dayCounter);
+            currentDay.setHours(0, 0, 0, 0);
+
+            if (currentDay.getMonth() != thisMonth) { // [5a]
+                output += '<div class="calendar-label-month">' + Utils.monthNames[currentDay.getMonth()][0] + ' ' + currentDay.getFullYear() + '</div>' + weekLabels; // [5a]
+
+                thisMonth = currentDay.getMonth(); // [5a]
+            }
+
+            var currentDayKey = Utils.getDateKey(currentDay); // [2]
+            var dayTasks = '';
+            var difficultyRating = 0; // [5b]
+            var dayDuration = 0;
+            var dayDurationAsterisk = false;
+
+            if (currentDayKey in datesWithTasksDue) { // [2], [5]
+                var morningTasks = []; // [5c]
+                var afternoonTasks = []; // [5c]
+                var eveningTasks = []; // [5c]
+                var otherTasks = []; // [5c]
+
+                Object.keys(datesWithTasksDue[currentDayKey]).forEach(function (key) { // [2], [5]
+                    var task = datesWithTasksDue[currentDayKey][key]; // [2]
+
+                    if (typeof task.priority === 'number') {
+                        difficultyRating += task.priority; // [5b]
+                    }
+
+                    if (task.timeOfDay === 'morning') {
+                        morningTasks.push(task); // [5c]
+
+                    }
+                    else if (task.timeOfDay === 'afternoon') {
+                        afternoonTasks.push(task); // [5c]
+                    }
+                    else if (task.timeOfDay === 'evening') {
+                        eveningTasks.push(task); // [5c]
+                    }
+                    else {
+                        otherTasks.push(task); // [5c]
+                    }
+                });
+
+                if (morningTasks.length > 0) { // [5c]
+                    var badgesHtml = '';
+                    var timeOfDayDuration = 0;
+                    var timeOfDayDurationAsterisk = false;
+
+                    morningTasks.forEach(function (value) {
+                        var taskDuration = value.duration();
+                        dayDuration += taskDuration;
+                        timeOfDayDuration += taskDuration;
+                        if (taskDuration === 0) {
+                            dayDurationAsterisk = true;
+                            timeOfDayDurationAsterisk = true;
+                        }
+
+                        badgesHtml += value.badgeHtml(); // [5]
+                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (morning): ' + value.text);
+                    });
+
+                    dayTasks += '<div><small>Morning:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Morning tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
+                }
+
+                if (afternoonTasks.length > 0) { // [5c]
+                    var badgesHtml = '';
+                    var timeOfDayDuration = 0;
+                    var timeOfDayDurationAsterisk = false;
+
+                    afternoonTasks.forEach(function (value) {
+                        var taskDuration = value.duration();
+                        dayDuration += taskDuration;
+                        timeOfDayDuration += taskDuration;
+                        if (taskDuration === 0) {
+                            dayDurationAsterisk = true;
+                            timeOfDayDurationAsterisk = true;
+                        }
+
+                        badgesHtml += value.badgeHtml(); // [5]
+                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (afternoon): ' + value.text);
+                    });
+
+                    dayTasks += '<div><small>Afternoon:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Afternoon tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
+                }
+
+                if (eveningTasks.length > 0) { // [5c]
+                    var badgesHtml = '';
+                    var timeOfDayDuration = 0;
+                    var timeOfDayDurationAsterisk = false;
+
+                    eveningTasks.forEach(function (value) {
+                        var taskDuration = value.duration();
+                        dayDuration += taskDuration;
+                        timeOfDayDuration += taskDuration;
+                        if (taskDuration === 0) {
+                            dayDurationAsterisk = true;
+                            timeOfDayDurationAsterisk = true;
+                        }
+
+                        badgesHtml += value.badgeHtml(); // [5]
+                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (evening): ' + value.text);
+                    });
+
+                    dayTasks += '<div><small>Evening:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Evening tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>' + badgesHtml;
+                }
+
+                if (otherTasks.length > 0) { // [5c]
+                    var badgesHtml = '';
+                    var timeOfDayDuration = 0;
+                    var timeOfDayDurationAsterisk = false;
+
+                    otherTasks.forEach(function (value) {
+                        var taskDuration = value.duration();
+                        dayDuration += taskDuration;
+                        timeOfDayDuration += taskDuration;
+                        if (taskDuration === 0) {
+                            dayDurationAsterisk = true;
+                            timeOfDayDurationAsterisk = true;
+                        }
+
+                        badgesHtml += value.badgeHtml(); // [5]
+                        Utils.updateLogs('Task added to calendar on ' + currentDayKey + ' (whenever): ' + value.text);
+                    });
+
+                    if (morningTasks.length > 0 || afternoonTasks.length > 0 || eveningTasks.length > 0) {
+                        dayTasks += '<div><small>Whenever:</small>' + (timeOfDayDuration > 0 ? ' <span class="badge badge-pill badge-light float-right" title="Other tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : '') + '</span>' : '') + '</div>';
+                    }
+
+                    dayTasks += badgesHtml;
+                }
+            }
+
+            if (currentDay.getDay() === 0 || currentDay.getDate() === 1) { // [5a]
+                output += '<div class="calendar-week">';
+            }
+
+            output += '<div class="calendar-day' + (dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '') + '" id="calendar-day-' + Utils.getDateKey(currentDay) + '">' +
+                '<div class="p-1">' +
+                '<span class="calendar-label-day">' +
+                '<span class="d-md-none">' + weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1] + '</span> ' +
+                currentDay.getDate() +
+                //' <span class="badge badge-pill badge-light float-right" title="Difficulty rating"><i class="fas fa-star" aria-hidden="true"></i>' + (difficultyRating % 1 === 0 ? difficultyRating : difficultyRating.toFixed(1)) + '</span>' + 
+                ' <span class="badge badge-pill badge-light float-right" title="Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : '') + '</span>' +
+                '</span>' +
+                dayTasks +
+                '</div>' +
+                '</div>'; // [5]
+
+            if (currentDay.getDay() === 6 || currentDay.getDate() === Utils.getLastDayOfMonth(currentDay.getFullYear(), currentDay.getMonth()) || dayCounter === Utils.calendarDaysLimit) { // [5a]
+                output += '</div><!-- end .calendar-week -->';
+            }
+
+            dayCounter = dayCounter + 1; // [5]
         }
 
-        output += '<div class="calendar-day' + (dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '') + '">' +
-            '<div class="p-1">' +
-            '<span class="calendar-label-day">' +
-            '<span class="d-md-none">' + weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1] + '</span> ' +
-            currentDay.getDate() +
-            //' <span class="badge badge-pill badge-light float-right" title="Difficulty rating"><i class="fas fa-star" aria-hidden="true"></i>' + (difficultyRating % 1 === 0 ? difficultyRating : difficultyRating.toFixed(1)) + '</span>' + 
-            ' <span class="badge badge-pill badge-light float-right" title="Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : '') + '">' + Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : '') + '</span>' +
-            '</span>' +
-            dayTasks +
-            '</div>' +
-            '</div>'; // [5]
-
-        if (currentDay.getDay() === 6 || currentDay.getDate() === Utils.getLastDayOfMonth(currentDay.getFullYear(), currentDay.getMonth()) || dayCounter === calendarDaysLimit) { // [5a]
-            output += '</div><!-- end .calendar-week -->';
-        }
-
-        dayCounter = dayCounter + 1; // [5]
+        $('#strategitica-calendar').html(output); // [5], [6]
     }
+    else {
+        if ($('#strategitica-calendar').not(':empty') && taskId in user.tasks) {
+            var task = new Task(user.tasks[taskId], user);
+            task.create();
 
-    $('#strategitica-calendar').html(output); // [5], [6]
+            $('[data-taskid="' + taskId + '"]').remove();
 
-    $('.badge-title-js').each(function () {
-        $(this).html($(md.render($(this).html())).html());
-    });
+            var taskDates = task.dates(Utils.calendarDaysLimit);
+
+            for (var i = 0; i < taskDates.length; i++) {
+                var date = taskDates[i];
+                $('#calendar-day-' + date).append(task.badgeHtml());                
+                Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
+            }
+        }
+    }
 
     $('.badge-task-js').on('click', function (e) { // [6]
         TaskActions.openModal($(this).data('taskid'), user);
@@ -452,9 +447,8 @@ $('body').popover({
     template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>',
     content: function () {
         var taskId = $(this).data('taskid');
-        var task = null;
         if (taskId in user.tasks) {
-            task = new Task(user.tasks[taskId], user);
+            var task = new Task(user.tasks[taskId], user);
             task.create();
             return $(task.tooltipHtml());
         }
@@ -517,7 +511,7 @@ $('#strategitica-logs-clear').on('click', function () {
 // --- Start task change handlers ---
 
 $(document).on('change', '.task-checklist-item-js', function (e) {
-    TaskActions.scoreChecklistItem($(this), user, function () {
+    TaskActions.scoreChecklistItem($(this), user, function() {
         loadAll(false);
     });
 });
@@ -543,8 +537,9 @@ $(document).on('click', '#task-delete', function (e) {
 });
 
 $(document).on('click', '#task-save', function (e) {
-    TaskActions.save($(this).data('taskid'), user, function () {
-        loadAll(false);
+    var taskId = $(this).data('taskid');
+    TaskActions.save(taskId, user, function () {
+        loadAll(false, taskId);
     });
 });
 

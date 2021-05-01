@@ -10,8 +10,8 @@ export class User {
     constructor(id, token) {
         this.id = id;
         this.token = token;
-        this.tags = null;
-        this.tasks = null;
+        this.tags = {};
+        this.tasks = {};
         this.name = '';
         this.displayName = '';
         this.class = '';
