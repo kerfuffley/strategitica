@@ -689,8 +689,6 @@ export class Task {
      */
     tooltipHtml() {
         var task = this;
-        Utils.updateLogs('Generating tooltip contents for ' + task.text);
-
         var tooltipHtml = '';
 
         tooltipHtml += '<h3 class="popover-header">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</h3>';

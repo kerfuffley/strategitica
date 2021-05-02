@@ -33,27 +33,23 @@ export function complete(taskId, user, onComplete) {
             })
                 .done(function (data) {
                     let result = data.data;
-
-                    let message = 'Task completed!';
-
+                    
                     if ('_tmp' in result) {
                         if ('drop' in result._tmp) {
                             if ('dialog' in result._tmp.drop) {
-                                message += '<br>' + result._tmp.drop.dialog;
+                                $('body').append('<div id="task-' + taskId + '-completed-message">' + result._tmp.drop.dialog + '</div>');
                             }
                         }
                     }
-
-                    $('#modal-task').modal('hide');
-
-                    Utils.updateLogs(task.text + ': ' + message);
-                    Utils.updateToast('success', task.text, message);
 
                     if (onComplete) {
                         onComplete();
                     }
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
+                    $('#strategitica-task-progress').addClass('d-none');
+                    $('#modal-task').modal('hide');
+                    
                     let message = 'Couldn\'t complete ' + task.text + ': <br>' + jqXHR.status + ' Error';
 
                     if ('responseJSON' in jqXHR) {
@@ -61,20 +57,24 @@ export function complete(taskId, user, onComplete) {
                             message += ' - ' + jqXHR.responseJSON.message;
                         }
                     }
-
+                    
                     Utils.updateLogs('Error: ' + message, true);
                     Utils.updateToast('error', 'Error', message);
                 });
         }
         catch (error) {
+            $('#strategitica-task-progress').addClass('d-none');
             $('#modal-task').modal('hide');
-
+            
             var message = 'Couldn\'t complete ' + task.text + ': <br>' + error.responseText;
             Utils.updateLogs('Error: ' + message, true);
             Utils.updateToast('error', 'Error', message);
         }
     }
     else {
+        $('#strategitica-task-progress').addClass('d-none');
+        $('#modal-task').modal('hide');
+        
         var message = 'Error completing task: Couldn\'t find a task with ID ' + taskId + ', or that task ID isn\'t unique';
         Utils.updateLogs(message, true);
         Utils.updateToast('error', 'Error', message);
@@ -131,19 +131,15 @@ export function remove(taskId, user, onComplete) {
                         xhr.setRequestHeader('x-api-key', user.token);
                     }
                 })
-                    .done(function (data) {
-                        let message = 'Task deleted successfully.';
-    
-                        $('#modal-task').modal('hide');
-    
-                        Utils.updateLogs(task.text + ': ' + message);
-                        Utils.updateToast('success', task.text, message);
-    
+                    .done(function (data) {    
                         if (onComplete) {
                             onComplete();
                         }
                     })
                     .fail(function (jqXHR, textStatus, errorThrown) {
+                        $('#strategitica-task-progress').addClass('d-none');
+                        $('#modal-task').modal('hide');
+
                         let message = 'Couldn\'t delete task: <br>' + jqXHR.status + ' Error';
     
                         if ('responseJSON' in jqXHR) {
@@ -159,6 +155,7 @@ export function remove(taskId, user, onComplete) {
                     });
             }
             catch (error) {
+                $('#strategitica-task-progress').addClass('d-none');
                 $('#modal-task').modal('hide');
     
                 var message = 'Couldn\'t delete task: <br>' + error.responseText;
@@ -305,18 +302,14 @@ export function save(taskId, user, onComplete) {
                 }
             })
                 .done(function (data) {
-                    let message = 'Task successfully saved.';
-
-                    $('#modal-task').modal('hide');
-
-                    Utils.updateLogs(taskText + ': ' + message);
-                    Utils.updateToast('success', taskText, message);
-
                     if (onComplete) {
                         onComplete();
                     }
                 })
                 .fail(function (jqXHR, textStatus, errorThrown) {
+                    $('#strategitica-task-progress').addClass('d-none');
+                    $('#modal-task').modal('hide');
+
                     let message = 'Couldn\'t save ' + taskText + ': <br>' + jqXHR.status + ' Error';
 
                     if ('responseJSON' in jqXHR) {
@@ -330,6 +323,7 @@ export function save(taskId, user, onComplete) {
                 });
         }
         catch (error) {
+            $('#strategitica-task-progress').addClass('d-none');
             $('#modal-task').modal('hide');
 
             var message = 'Couldn\'t save ' + taskText + ': <br>' + error.responseText;
@@ -367,16 +361,14 @@ export function scoreChecklistItem(checkbox, user, onComplete) {
             }
         })
             .done(function (data) {
-                // Cool, it worked! Let's be quiet about it though--it's just a
-                // checkbox. Updating a toast for this is a tad annoying to the
-                // user, I think.
-                Utils.updateLogs(data.data.text + ': Checklist item scored successfully');
-
                 if (onComplete) {
                     onComplete();
                 }
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
+                $('#strategitica-task-progress').addClass('d-none');
+                $('#modal-task').modal('hide');
+
                 let message = 'Couldn\'t score checklist item: <br>' + jqXHR.status + ' Error';
 
                 if ('responseJSON' in jqXHR) {
@@ -390,6 +382,7 @@ export function scoreChecklistItem(checkbox, user, onComplete) {
             });
     }
     catch (error) {
+        $('#strategitica-task-progress').addClass('d-none');
         $('#modal-task').modal('hide');
 
         var message = 'Couldn\'t score checklist item: <br>' + error.responseText;

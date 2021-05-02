@@ -50,7 +50,7 @@ export class User {
 
                 var allTasks = {};
 
-                [].concat(dailies[0].data, todos[0].data).forEach(function(item, index, myArray) {
+                [].concat(dailies[0].data, todos[0].data).forEach(function (item, index, myArray) {
                     allTasks[item.id] = item;
                 });
 
@@ -104,16 +104,13 @@ export class User {
             });
         }
         catch (error) {
-            var message = 'Couldn\'t get data: ' + error.responseText;
-            Utils.updateLogs(message, true);
+            Utils.updateLogs('Couldn\'t get data: ' + error.responseText, true);
         }
     }
 
-    getTags() {
-        var userId = this.id;
-        var apiToken = this.token;
-
-        return $.ajax({
+    getTags(onComplete) {
+        var user = this;
+        var options = {
             async: true,
             url: 'https://habitica.com/api/v3/tags',
             type: 'GET',
@@ -122,16 +119,93 @@ export class User {
             cache: false,
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('x-client', Utils.appClient);
-                xhr.setRequestHeader('x-api-user', userId);
-                xhr.setRequestHeader('x-api-key', apiToken);
+                xhr.setRequestHeader('x-api-user', user.id);
+                xhr.setRequestHeader('x-api-key', user.token);
             }
-        });
+        };
+
+        if (onComplete) {
+            try {
+                $.ajax(options)
+                .done(function (data) {
+                    let userTagNames = {};
+
+                    if (data.data !== null) {
+                        data.data.forEach(function (value) {
+                            userTagNames[value.id.toString()] = value.name;
+                        });
+                    }
+    
+                    user.tags = userTagNames;
+
+                    Utils.updateLogs('Tags loaded successfully');
+
+                    onComplete();
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    var message = 'Couldn\'t get user\'s tasks';
+                    if ('status' in jqXHR) {
+                        message += ': ' + error.status + ' Error';
+                        if ('responseJSON' in error) {
+                            if ('message' in error.responseJSON) {
+                                message += ' - ' + error.responseJSON.message;
+                            }
+                        }
+                    }
+    
+                    Utils.updateLogs(message, true);
+                })
+            }
+            catch (error) {
+                Utils.updateLogs('Couldn\'t get user\'s tasks: ' + error.responseText, true);
+            }
+        }
+        else {
+            return $.ajax(options);
+        }
+    }
+
+    getTasks(onComplete) {
+        var user = this;
+
+        try {
+            $.when(this.getDailies(), this.getTodos()).then(function (dailies, todos) {
+                var allTasks = {};
+    
+                [].concat(dailies[0].data, todos[0].data).forEach(function (item, index, myArray) {
+                    allTasks[item.id] = item;
+                });
+    
+                user.tasks = allTasks;
+
+                Utils.updateLogs('Tasks loaded successfully');
+
+                if(onComplete) {
+                    onComplete();
+                }
+            }, function (error) {
+                var message = 'Couldn\'t get tasks';
+                if ('status' in error) {
+                    message += ': ' + error.status + ' Error';
+                    if ('responseJSON' in error) {
+                        if ('message' in error.responseJSON) {
+                            message += ' - ' + error.responseJSON.message;
+                        }
+                    }
+                }
+    
+                Utils.updateLogs(message, true);
+            });
+        }
+        catch (error) {
+            Utils.updateLogs('Couldn\'t get tasks: ' + error.responseText, true);
+        }
     }
 
     getDailies() {
         var userId = this.id;
         var apiToken = this.token;
-
+        
         return $.ajax({
             async: true,
             url: 'https://habitica.com/api/v3/tasks/user',
@@ -172,11 +246,9 @@ export class User {
         });
     }
 
-    getUserInfo() {
-        var userId = this.id;
-        var apiToken = this.token;
-
-        return $.ajax({
+    getUserInfo(onComplete) {
+        var user = this;
+        var options = {
             async: true,
             url: 'https://habitica.com/api/v3/user',
             type: 'GET',
@@ -185,10 +257,66 @@ export class User {
             cache: false,
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('x-client', Utils.appClient);
-                xhr.setRequestHeader('x-api-user', userId);
-                xhr.setRequestHeader('x-api-key', apiToken);
+                xhr.setRequestHeader('x-api-user', user.id);
+                xhr.setRequestHeader('x-api-key', user.token);
             }
-        });
+        };
+
+        if (onComplete) {
+            try {
+                $.ajax(options)
+                .done(function (data) {
+                    if (data.data !== null) {
+                        user.name = data.data.auth.local.username;
+                        user.displayName = data.data.profile.name;
+                        user.class = data.data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : data.data.stats.class.charAt(0).toUpperCase() + data.data.stats.class.slice(1);
+                        user.level = data.data.stats.lvl;
+                        user.hp = data.data.stats.hp;
+                        user.hpMax = Math.floor(data.data.stats.maxHealth);
+                        user.exp = Math.floor(data.data.stats.exp);
+                        user.expToNextLevel = data.data.stats.toNextLevel;
+                        user.mp = Math.floor(data.data.stats.mp);
+                        user.mpMax = data.data.stats.maxMP;
+                        user.isSleeping = data.data.preferences.sleep;
+                        user.dayStart = data.data.preferences.dayStart;
+    
+                        var message = `User info loaded successfully. Here's some info about you:<br>
+                             Username: @${user.name}<br>
+                             Display Name: ${user.displayName}<br>
+                             Class: ${user.class}<br>
+                             Level: ${user.level}<br>
+                             HP: ${user.hp} / ${user.hpMax}<br>
+                             Experience: ${user.exp} / ${user.expToNextLevel}<br>
+                             MP: ${user.mp} / ${user.mpMax}<br>
+                             Resting in the tavern: ${user.isSleeping}<br>
+                             Day start: ${user.dayStart}<br>
+                             Tags: ${Object.values(user.tags)}`;
+                        Utils.updateLogs(message);
+                    }
+
+                    onComplete();
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    var message = 'Couldn\'t get user info';
+                    if ('status' in jqXHR) {
+                        message += ': ' + error.status + ' Error';
+                        if ('responseJSON' in error) {
+                            if ('message' in error.responseJSON) {
+                                message += ' - ' + error.responseJSON.message;
+                            }
+                        }
+                    }
+    
+                    Utils.updateLogs(message, true);
+                })
+            }
+            catch (error) {
+                Utils.updateLogs('Couldn\'t get user info: ' + error.responseText, true);
+            }
+        }
+        else {
+            return $.ajax(options);
+        }
     }
 
     /**

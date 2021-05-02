@@ -30,7 +30,7 @@ $('#strategitica-login').on('submit', function (event) {
     $('#strategitica-login-progress').removeClass('d-none');
 
     loadCalendar();
-    loadAll(false, null, function () {
+    loadAll(false, function () {
         $('#modal-login').modal('hide');
     });
 });
@@ -38,7 +38,7 @@ $('#strategitica-login').on('submit', function (event) {
 /**
  * Get the user's data and put their info into the page.
  */
-function loadAll(showMessage, taskId, onComplete) {
+function loadAll(showMessage, onComplete) {
     if (showMessage) {
         Utils.updateToast('info', 'Refreshing', 'Hang on a sec...');
     }
@@ -46,7 +46,7 @@ function loadAll(showMessage, taskId, onComplete) {
     user = new User(ID, token);
     user.create(function () {
         loadUserStats();
-        loadTasks(taskId);
+        loadTasks();
         loadTavernStatus();
 
         if (onComplete) {
@@ -168,6 +168,20 @@ function loadCalendar() {
             output += '<div class="calendar-week">';
         }
 
+        var timesOfDay = ['morning', 'afternoon', 'evening', 'whenever'];
+        var timesOfDayHtml = '';
+
+        for (var j = 0; j < timesOfDay.length; j++) {
+            timesOfDayHtml += `
+            <div class="calendar-day-${timesOfDay[j]}-js d-none">
+                <div class="calendar-label-timeofday calendar-label-timeofday-js">
+                    <small>${timesOfDay[j].charAt(0).toUpperCase() + timesOfDay[j].slice(1)}:</small>
+                    <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="${timesOfDay[j]} tasks duration">Unknown</span>
+                </div>
+                <div class="calendar-day-tasks-js"></div>
+            </div>`;
+        }
+
         output += `
         <div class="calendar-day${(dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '')}" id="calendar-day-${Utils.getDateKey(currentDay)}">
             <div class="p-1">
@@ -176,34 +190,7 @@ function loadCalendar() {
                     ${currentDay.getDate()}
                     <span class="badge badge-pill badge-light float-right calendar-day-duration-js d-none" title="Total tasks duration">Unknown</span>
                 </span>
-                <div class="calendar-day-morning-js d-none">
-                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
-                        <small>Morning:</small>
-                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Morning tasks duration">Unknown</span>
-                    </div>
-                    <div class="calendar-day-tasks-js"></div>
-                </div>
-                <div class="calendar-day-afternoon-js d-none">
-                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
-                        <small>Afternoon:</small>
-                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Afternoon tasks duration">Unknown</span>
-                    </div>
-                    <div class="calendar-day-tasks-js"></div>
-                </div>
-                <div class="calendar-day-evening-js d-none">
-                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
-                        <small>Evening:</small>
-                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Evening tasks duration">Unknown</span>
-                    </div>
-                    <div class="calendar-day-tasks-js"></div>
-                </div>
-                <div class="calendar-day-whenever-js d-none">
-                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
-                        <small>Whenever:</small>
-                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="Whenever tasks duration">Unknown</span>
-                    </div>
-                    <div class="calendar-day-tasks-js"></div>
-                </div>
+                ${timesOfDayHtml}
             </div>
         </div>`; // [3]
 
@@ -234,39 +221,31 @@ function loadCalendar() {
  *      day limit for the calendar. Each task will have some data-* attributes
  *      (see {@link Task.badgeHtml}) we'll use later to associate the task with
  *      some tooltip and modal text. As we're looping through the days and
- *      tasks, we'll also...
- *      a.  Check if each day is at the beginning or end of the week or month
- *          so that things can get aligned properly, and so that month and week
- *          labels can get added at the start of each new month.
- *      b.  Start adding up the difficulty of each task to come up with a
- *          difficulty rating for the day.
- *      c.  Put each task into an array based on which time of day it is.
- * 4.   Now all the tasks are added to the calendar, we need to make sure each
- *      task's badge is interactive.
+ *      tasks, we'll also put each task into an array based on which time of
+ *      day it is.
  */
-function loadTasks(taskId) {
-    if (!taskId) {
-        var tasks = user.tasks;
-        let datesWithTasksDue = {}; // [1]
+function loadTasks() {
+    var tasks = user.tasks;
+    let datesWithTasksDue = {}; // [1]
 
-        Object.keys(tasks).forEach((id, index) => { // [2]
-            var task = new Task(tasks[id], user);
-            task.create();
+    Object.keys(tasks).forEach((id, index) => { // [2]
+        var task = new Task(tasks[id], user);
+        task.create();
 
-            var taskDates = task.dates(Utils.calendarDaysLimit); // [2]
+        var taskDates = task.dates(Utils.calendarDaysLimit); // [2]
 
-            if (taskDates.length > 0) { // [2]
-                var taskTags = '';
-                if (task.tags.length > 0) {
-                    task.tags.forEach(function (value) {
-                        taskTags += (value !== task.tags[0] ? ', ' : '') + user.tags[value];
-                    });
-                }
-                else {
-                    taskTags = 'none';
-                }
+        if (taskDates.length > 0) { // [2]
+            var taskTags = '';
+            if (task.tags.length > 0) {
+                task.tags.forEach(function (value) {
+                    taskTags += (value !== task.tags[0] ? ', ' : '') + user.tags[value];
+                });
+            }
+            else {
+                taskTags = 'none';
+            }
 
-                var taskInfo = `We'll be looking at ${task.text} now; here's some info about it: <br>
+            var taskInfo = `Looking at which dates "${task.text}" should get added to now. Here's some info about this task:<br>
                     ID: ${task.id}<br>
                     Type: ${task.type}<br>
                     Tags: ${taskTags}<br>
@@ -286,141 +265,106 @@ function loadTasks(taskId) {
                     Checklist: ${task.checklist}<br>
                     Value: ${task.value}<br>
                     Time of Day: ${task.timeOfDay}`;
-                Utils.updateLogs(taskInfo);
+            Utils.updateLogs(taskInfo);
 
-                for (var j = 0; j < taskDates.length; j++) {
-                    var date = taskDates[j];
-                    if (!(date in datesWithTasksDue)) {
-                        datesWithTasksDue[date] = []; // [1]
-                    }
-
-                    if (datesWithTasksDue[date].indexOf(task.id) === -1) {
-                        datesWithTasksDue[date][task.id] = task; // [1], [2]
-
-                        Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
-                    }
-                }
-            }
-            else {
-                Utils.updateLogs('No applicable dates found for ' + task.text + ' - it won\'t be added to the calendar');
-            }
-        });
-
-        Object.keys(datesWithTasksDue).forEach((date, index) => { // [1], [3]
-            var currentDayCalendarId = '#calendar-day-' + date;
-            var difficultyRating = 0; // [3b]
-            var dayDuration = 0;
-            var dayDurationAsterisk = false;
-            var timesOfDay = {
-                'morning': [],
-                'afternoon': [],
-                'evening': [],
-                'whenever': []
-            }; // [3c]
-
-            $(currentDayCalendarId + ' .calendar-day-tasks-js:not(:empty)').empty();
-
-            Object.keys(datesWithTasksDue[date]).forEach(function (key) { // [1], [3]
-                var task = datesWithTasksDue[date][key]; // [1]
-
-                if (typeof task.priority === 'number') {
-                    difficultyRating += task.priority; // [3b]
+            for (var j = 0; j < taskDates.length; j++) {
+                var date = taskDates[j];
+                if (!(date in datesWithTasksDue)) {
+                    datesWithTasksDue[date] = []; // [1]
                 }
 
-                if (task.timeOfDay === 'morning') {
-                    timesOfDay['morning'].push(task); // [3c]
+                if (datesWithTasksDue[date].indexOf(task.id) === -1) {
+                    datesWithTasksDue[date][task.id] = task; // [1], [2]
                 }
-                else if (task.timeOfDay === 'afternoon') {
-                    timesOfDay['afternoon'].push(task); // [3c]
-                }
-                else if (task.timeOfDay === 'evening') {
-                    timesOfDay['evening'].push(task); // [3c]
-                }
-                else {
-                    timesOfDay['whenever'].push(task); // [3c]
-                }
-            });
-
-            Object.keys(timesOfDay).forEach((key, index) => {
-                if (timesOfDay[key].length > 0) { // [3c]
-                    var badgesHtml = '';
-                    var timeOfDayDuration = 0;
-                    var timeOfDayDurationAsterisk = false;
-
-                    $(currentDayCalendarId + ' .calendar-day-' + key + '-js').removeClass('d-none');
-
-                    timesOfDay[key].forEach(function (value) {
-                        var taskDuration = value.duration();
-                        dayDuration += taskDuration;
-                        timeOfDayDuration += taskDuration;
-                        if (taskDuration === 0) {
-                            dayDurationAsterisk = true;
-                            timeOfDayDurationAsterisk = true;
-                        }
-
-                        badgesHtml += value.badgeHtml(); // [3]
-                        Utils.updateLogs('Task added to calendar on ' + date + ' (' + key + '): ' + value.text);
-                    });
-
-                    var timeOfDayDurationEl = $(currentDayCalendarId + ' .calendar-day-' + key + '-js .calendar-timeofday-duration-js');
-                    if (timeOfDayDuration > 0) {
-                        timeOfDayDurationEl.html(Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : ''));
-                        timeOfDayDurationEl.attr('title', key + ' tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : ''));
-                        timeOfDayDurationEl.removeClass('d-none');
-                    }
-                    else {
-                        timeOfDayDurationEl.addClass('d-none');
-                    }
-
-                    $(currentDayCalendarId + ' .calendar-day-' + key + '-js .calendar-day-tasks-js').html(badgesHtml);
-
-                    if (key === 'whenever') {
-                        if (timesOfDay['morning'].length > 0 || timesOfDay['afternoon'].length > 0 || timesOfDay['evening'].length > 0) {
-                            $(currentDayCalendarId + ' .calendar-day-whenever-js .calendar-label-timeofday-js').removeClass('d-none');
-                        }
-                        else {
-                            $(currentDayCalendarId + ' .calendar-day-whenever-js .calendar-label-timeofday-js').addClass('d-none');
-                        }
-                    }
-                }
-                else {
-                    $(currentDayCalendarId + ' .calendar-day-' + key + '-js').addClass('d-none');
-                }
-            });
-
-            var currentDayDurationEl = $(currentDayCalendarId + ' .calendar-day-duration-js');
-            if (dayDuration > 0) {
-                currentDayDurationEl.html(Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : ''));
-                currentDayDurationEl.attr('title', 'Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : ''));
-                currentDayDurationEl.removeClass('d-none');
-            }
-            else {
-                currentDayDurationEl.addClass('d-none');
-            }
-        });
-    }
-    else {
-        if (taskId in user.tasks) {
-            var task = new Task(user.tasks[taskId], user);
-            task.create();
-
-            $('[data-taskid="' + taskId + '"]').remove();
-
-            var taskDates = task.dates(Utils.calendarDaysLimit);
-
-            for (var i = 0; i < taskDates.length; i++) {
-                var date = taskDates[i];
-                $('#calendar-day-' + date).append(task.badgeHtml());
-                Utils.updateLogs(task.text + ' added to the list of tasks on ' + date);
             }
         }
-    }
+        else {
+            Utils.updateLogs('No applicable dates found for "' + task.text + '" - it won\'t be added to the calendar');
+        }
+    });
 
-    $('.badge-task-js').on('click', function (e) { // [4]
-        TaskActions.openModal($(this).data('taskid'), user);
-        TaskActions.editCancel();
+    Utils.updateLogs('Ready to add tasks to the calendar!');
+
+    Object.keys(datesWithTasksDue).forEach((date, index) => { // [1], [3]
+        var currentDayCalendarId = '#calendar-day-' + date;
+        var dayDuration = 0;
+        var dayDurationAsterisk = false;
+        var timesOfDay = {
+            'morning': [],
+            'afternoon': [],
+            'evening': [],
+            'whenever': []
+        }; // [3]
+
+        $(currentDayCalendarId + ' .calendar-day-tasks-js:not(:empty)').empty();
+
+        Object.keys(datesWithTasksDue[date]).forEach(function (key) { // [1], [3]
+            var task = datesWithTasksDue[date][key]; // [1]
+
+            timesOfDay[task.timeOfDay].push(task); // [3]
+        });
+
+        Object.keys(timesOfDay).forEach((key, index) => {
+            if (timesOfDay[key].length > 0) { // [3]
+                var badgesHtml = '';
+                var timeOfDayDuration = 0;
+                var timeOfDayDurationAsterisk = false;
+
+                $(currentDayCalendarId + ' .calendar-day-' + key + '-js').removeClass('d-none');
+
+                timesOfDay[key].forEach(function (value) {
+                    var taskDuration = value.duration();
+                    dayDuration += taskDuration;
+                    timeOfDayDuration += taskDuration;
+                    if (taskDuration === 0) {
+                        dayDurationAsterisk = true;
+                        timeOfDayDurationAsterisk = true;
+                    }
+
+                    badgesHtml += value.badgeHtml(); // [3]
+                    Utils.updateLogs('Added to ' + date + ' (' + key + '): ' + value.text);
+                });
+
+                var timeOfDayDurationEl = $(currentDayCalendarId + ' .calendar-day-' + key + '-js .calendar-timeofday-duration-js');
+                if (timeOfDayDuration > 0) {
+                    timeOfDayDurationEl.html(Utils.formatDuration(timeOfDayDuration) + (timeOfDayDurationAsterisk ? '*' : ''));
+                    timeOfDayDurationEl.attr('title', key + ' tasks duration' + (timeOfDayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : ''));
+                    timeOfDayDurationEl.removeClass('d-none');
+                }
+                else {
+                    timeOfDayDurationEl.addClass('d-none');
+                }
+                timeOfDayDurationEl.data('duration', timeOfDayDuration);
+
+                $(currentDayCalendarId + ' .calendar-day-' + key + '-js .calendar-day-tasks-js').html(badgesHtml);
+
+                if (key === 'whenever') {
+                    if (timesOfDay['morning'].length > 0 || timesOfDay['afternoon'].length > 0 || timesOfDay['evening'].length > 0) {
+                        $(currentDayCalendarId + ' .calendar-day-whenever-js .calendar-label-timeofday-js').removeClass('d-none');
+                    }
+                    else {
+                        $(currentDayCalendarId + ' .calendar-day-whenever-js .calendar-label-timeofday-js').addClass('d-none');
+                    }
+                }
+            }
+            else {
+                $(currentDayCalendarId + ' .calendar-day-' + key + '-js').addClass('d-none');
+            }
+        });
+
+        var currentDayDurationEl = $(currentDayCalendarId + ' .calendar-day-duration-js');
+        if (dayDuration > 0) {
+            currentDayDurationEl.html(Utils.formatDuration(dayDuration) + (dayDurationAsterisk ? '*' : ''));
+            currentDayDurationEl.attr('title', 'Total tasks duration' + (dayDurationAsterisk ? ' (may be inaccurate since the duration for one or more tasks couldn\'t be determined)' : ''));
+            currentDayDurationEl.removeClass('d-none');
+        }
+        else {
+            currentDayDurationEl.addClass('d-none');
+        }
+        currentDayDurationEl.data('duration', dayDuration);
     });
 }
+
 
 /**
  * Updates the DOM with the user's current tavern status.
@@ -481,6 +425,11 @@ $('body').tooltip({
     selector: '[data-toggle="tooltip"]'
 });
 
+$(document).on('click', '.badge-task-js', function(e) {
+    TaskActions.openModal($(this).data('taskid'), user);
+    TaskActions.editCancel();
+});
+
 $(function () {
     if (Utils.showLogs) {
         $('#strategitica-logs').removeClass('d-none');
@@ -529,15 +478,56 @@ $('#strategitica-logs-clear').on('click', function () {
 // --- Start task change handlers ---
 
 $(document).on('change', '.task-checklist-item-js', function (e) {
-    TaskActions.scoreChecklistItem($(this), user, function () {
-        loadAll(false);
+    var checkbox = $(this);
+    var checkboxTitle = checkbox.data('itemtitle');
+
+    Utils.updateLogs('Scoring checklist item "' + checkboxTitle + '"...');
+    $('#strategitica-task-progress').removeClass('d-none');
+
+    TaskActions.scoreChecklistItem(checkbox, user, function () {
+        user.getTasks(function() {
+            $('#strategitica-task-progress').addClass('d-none');
+
+            Utils.updateLogs('Checklist item "' + checkboxTitle + '" scored successfully.');
+        });
     });
 });
 
 $(document).on('click', '#task-complete', function (e) {
-    TaskActions.complete($(this).data('taskid'), user, function () {
-        loadAll(false);
-    });
+    var taskId = $(this).data('taskid');
+
+    if (taskId in user.tasks) {
+        var taskTitle = user.tasks[taskId].text;
+
+        Utils.updateLogs('Completing "' + taskTitle + '"...');
+        $('#strategitica-task-progress').removeClass('d-none');
+    
+        TaskActions.complete(taskId, user, function () {        
+            user.getTasks(function() {
+                loadTasks();
+
+                user.getUserInfo(function() {
+                    $('#strategitica-task-progress').addClass('d-none');
+                    $('#modal-task').modal('hide');
+
+                    loadUserStats();
+                    loadTavernStatus();
+
+                    let message = 'Task completed successfully.';
+                    let extraMessageEl = $('#task-' + taskId + '-completed-message');
+                    let extraMessage = extraMessageEl.length ? extraMessageEl.html() : '';
+                    Utils.updateLogs(taskTitle + ': ' + message + extraMessage);
+                    Utils.updateToast('success', taskTitle, message + (extraMessage !== '' ? '<br>' + extraMessage : ''));
+                    extraMessageEl.remove();
+                });
+            });
+        });
+    }
+    else {
+        var message = 'Couldn\'t complete task with ID ' + taskId + ' as no task with that ID could be found';
+        Utils.updateLogs(message, true);
+        Utils.updateToast('error', 'Error', message);
+    }
 });;
 
 $(document).on('click', '#task-edit', function (e) {
@@ -549,16 +539,65 @@ $(document).on('click', '#task-edit-cancel', function (e) {
 });
 
 $(document).on('click', '#task-delete', function (e) {
-    TaskActions.remove($(this).data('taskid'), user, function () {
-        loadAll(false);
-    });
+    var taskId = $(this).data('taskid');
+
+    if (taskId in user.tasks) {
+        var task = user.tasks[taskId];
+        Utils.updateLogs('Deleting "' + task.text + '"...');
+        $('#strategitica-task-progress').removeClass('d-none');
+
+        TaskActions.remove(taskId, user, function () {
+            delete user.tasks[taskId];
+            $('.badge-task-js[data-taskid="' + taskId + '"]').remove();
+
+            $('#strategitica-task-progress').addClass('d-none');
+            $('#modal-task').modal('hide');
+
+            let message = 'Task deleted successfully.';
+            Utils.updateLogs(task.text + ': ' + message);
+            Utils.updateToast('success', task.text, message);
+        });
+    }
+    else {
+        var message = 'Couldn\'t delete task with ID ' + taskId + ' as no task with that ID could be found';
+        Utils.updateLogs(message, true);
+        Utils.updateToast('error', 'Error', message);
+    }
 });
 
 $(document).on('click', '#task-save', function (e) {
     var taskId = $(this).data('taskid');
-    TaskActions.save(taskId, user, function () {
-        loadAll(false, taskId);
-    });
+
+    if (taskId in user.tasks || taskId === 'new') {
+        var taskTitle = '';
+        if (taskId === 'new') {
+            taskTitle = $("#task-text").val();
+        }
+        else {
+            taskTitle = user.tasks[taskId].text;
+        }
+
+        Utils.updateLogs('Saving "' + taskTitle + '"...');
+        $('#strategitica-task-progress').removeClass('d-none');
+    
+        TaskActions.save(taskId, user, function () {        
+            user.getTasks(function() {
+                $('#strategitica-task-progress').addClass('d-none');
+                $('#modal-task').modal('hide');
+
+                loadTasks();
+
+                let message = 'Task successfully saved.';
+                Utils.updateLogs(taskTitle + ': ' + message);
+                Utils.updateToast('success', taskTitle, message);
+            });
+        });
+    }
+    else {
+        var message = 'Couldn\'t save task with ID ' + taskId + ' as no task with that ID could be found';
+        Utils.updateLogs(message, true);
+        Utils.updateToast('error', 'Error', message);
+    }
 });
 
 $(document).on('change', '#modal-task [name="task-frequency"]', function () {
