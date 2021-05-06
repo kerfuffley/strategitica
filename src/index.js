@@ -29,7 +29,6 @@ $('#strategitica-login').on('submit', function (event) {
 
     $('#strategitica-login-progress').removeClass('d-none');
 
-    loadCalendar();
     loadAll(false, function () {
         $('#modal-login').modal('hide');
     });
@@ -80,128 +79,156 @@ function loadUserStats() {
  * This basically generates an empty calendar for as many days in the future as
  * Strategitica is supposed to show (see {@link calendarDaysLimit}). The more
  * complex version is this:
- * 1.   Provide some basic info, including but not limited to what today is,
+ * 1.   Get today's date, taking into consideration the user's custom day start
+ *      (CDS) (see {@link https://habitica.fandom.com/wiki/Custom_Day_Start}).
+ * 2.   We need to determine whether the calendar HTML should be generated so
+ *      we're not doing any unnecessary DOM manipulation. We'll do this by
+ *      essentially logging the last date the calendar HTML was generated and
+ *      comparing that with the current date. 
+ *      a.  If there is no current log of when the calendar HTML was generated,
+ *          that means it hasn't been generated yet and therefore should be
+ *          generated.
+ *      b.  Basically, if the last time the calendar HTML was generated was on
+ *          a previous day, then it should be re-generated.
+ * 3.   Provide some basic info, including but not limited to what today is,
  *      what's the first day of the current month, what the name of each day of
  *      the week is, etc.
- * 2.   Start coming up with the calendar HTML. Regardless of what day it is
+ * 4.   Start coming up with the calendar HTML. Regardless of what day it is
  *      today, we need to start off the calendar with the current month,
  *      including past days up to yesterday, because a calendar that begins
  *      mid-month looks weird. Those days also need to be styled differently so
  *      it's clear to the user that they're days in the past.
- * 3.   Go through each date from today onward and add HTML for each day. We'll
+ * 5.   Go through each date from today onward and add HTML for each day. We'll
  *      keep doing this until we've reached {@link calendarDaysLimit}. As we're
  *      looping through the days, we'll also check if each day is at the
  *      beginning or end of the week or month so that things can get aligned
  *      properly, and so that month and week labels can get added at the start
  *      of each new month.
- * 4.   Finally, the calendar HTML is added to the DOM.
+ * 6.   Finally, the calendar HTML is added to the DOM.
  */
 function loadCalendar() {
-    let output = '';
+    var today = new Date(); // [1]
+    today.setHours(today.getHours() - user.dayStart, 0, 0, 0); // [1]
+    var shouldGenerateCalendar = false; // [2]
 
-    let today = new Date(); // [1]
-    today.setHours(0, 0, 0, 0);
-    let thisMonth = today.getMonth(); // [1]
-    let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [1]
-    let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [1]
-    let weekDayNames = [ // [1]
-        ['Sunday', 'Sun'],
-        ['Monday', 'Mon'],
-        ['Tuesday', 'Tue'],
-        ['Wednesday', 'Wed'],
-        ['Thursday', 'Thu'],
-        ['Friday', 'Fri'],
-        ['Saturday', 'Sat']
-    ];
+    if (typeof window.calendarLastGeneratedDate === 'undefined') { // [2a]
+        window.calendarLastGeneratedDate = today; // [2a]
+        shouldGenerateCalendar = true; // [2a]
+    }
+    else {
+        var isStillToday = window.calendarLastGeneratedDate.getDate() === today.getDate() && window.calendarLastGeneratedDate.getMonth() === today.getMonth() && window.calendarLastGeneratedDate.getFullYear() === today.getFullYear(); // [2b]
+        window.calendarLastGeneratedDate = today; // [2b]
 
-    var weekLabels = '<div class="calendar-week">'; // [2]
+        if (!isStillToday) {
+            shouldGenerateCalendar = true; // [2b]
+        }
+    }
 
-    weekDayNames.forEach(function (value) { // [1], [2]
-        weekLabels += '<div class="calendar-label-week">';
-        weekLabels += '<span class="d-none d-lg-inline">' + value[0] + '</span>';
-        weekLabels += '<span class="d-none d-md-block d-lg-none">' + value[1] + '</span>';
+    if (shouldGenerateCalendar) { // [2]
+        let output = '';
+
+        let thisMonth = today.getMonth(); // [3]
+        let firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // [3]
+        let firstOfMonthDayOfWeek = firstOfMonth.getDay(); // [3]
+        let weekDayNames = [ // [3]
+            ['Sunday', 'Sun'],
+            ['Monday', 'Mon'],
+            ['Tuesday', 'Tue'],
+            ['Wednesday', 'Wed'],
+            ['Thursday', 'Thu'],
+            ['Friday', 'Fri'],
+            ['Saturday', 'Sat']
+        ];
+    
+        var weekLabels = '<div class="calendar-week">'; // [4]
+    
+        weekDayNames.forEach(function (value) { // [3], [4]
+            weekLabels += '<div class="calendar-label-week">';
+            weekLabels += '<span class="d-none d-lg-inline">' + value[0] + '</span>';
+            weekLabels += '<span class="d-none d-md-block d-lg-none">' + value[1] + '</span>';
+            weekLabels += '</div>';
+        });
+    
         weekLabels += '</div>';
-    });
-
-    weekLabels += '</div>';
-
-    output += `
-    <div class="calendar-label-month">${Utils.monthNames[today.getMonth()][0]} ${today.getFullYear()}</div>
-    <div class="clearfix"></div>
-    ${weekLabels}`; // [2]
-
-    for (var i = 1; i < today.getDate(); i++) { // [2]
-        var thisDate = new Date(today.getFullYear(), today.getMonth(), i);
-
-        if (i === 1 || thisDate.getDay() === 0) { // if this day is the first of the month OR if this day is Sunday
-            output += '<div class="calendar-week">';
-        }
-
+    
         output += `
-        <div class="calendar-day calendar-day-past${(i === 1 ? ' calendar-day-offset' + firstOfMonthDayOfWeek : '')} d-none d-md-block">
-            <div class="p-1">
-                <span class="calendar-label-day">${i}</span>
-            </div>
-        </div>`; // [2]
-
-        if (thisDate.getDay() === 6) { // if this day is Saturday
-            output += '</div><!-- end .calendar-week -->';
-        }
-    }
-
-    var dayCounter = 0; // [3]
-
-    for (var i = 0; i <= Utils.calendarDaysLimit; i++) { // [3]
-        var currentDay = new Date(today);
-        currentDay.setDate(currentDay.getDate() + dayCounter);
-        currentDay.setHours(0, 0, 0, 0);
-
-        if (currentDay.getMonth() != thisMonth) { // [3]
+        <div class="calendar-label-month">${Utils.monthNames[today.getMonth()][0]} ${today.getFullYear()}</div>
+        <div class="clearfix"></div>
+        ${weekLabels}`; // [4]
+    
+        for (var i = 1; i < today.getDate(); i++) { // [4]
+            var thisDate = new Date(today.getFullYear(), today.getMonth(), i);
+    
+            if (i === 1 || thisDate.getDay() === 0) { // if this day is the first of the month OR if this day is Sunday
+                output += '<div class="calendar-week">';
+            }
+    
             output += `
-            <div class="calendar-label-month">${Utils.monthNames[currentDay.getMonth()][0]} ${currentDay.getFullYear()}</div>
-            ${weekLabels}`; // [3]
-
-            thisMonth = currentDay.getMonth(); // [3]
-        }
-
-        if (currentDay.getDay() === 0 || currentDay.getDate() === 1) { // [3]
-            output += '<div class="calendar-week">';
-        }
-
-        var timesOfDay = ['morning', 'afternoon', 'evening', 'whenever'];
-        var timesOfDayHtml = '';
-
-        for (var j = 0; j < timesOfDay.length; j++) {
-            timesOfDayHtml += `
-            <div class="calendar-day-${timesOfDay[j]}-js d-none">
-                <div class="calendar-label-timeofday calendar-label-timeofday-js">
-                    <small>${timesOfDay[j].charAt(0).toUpperCase() + timesOfDay[j].slice(1)}:</small>
-                    <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="${timesOfDay[j]} tasks duration">Unknown</span>
+            <div class="calendar-day calendar-day-past${(i === 1 ? ' calendar-day-offset' + firstOfMonthDayOfWeek : '')} d-none d-md-block">
+                <div class="p-1">
+                    <span class="calendar-label-day">${i}</span>
                 </div>
-                <div class="calendar-day-tasks-js"></div>
-            </div>`;
+            </div>`; // [4]
+    
+            if (thisDate.getDay() === 6) { // if this day is Saturday
+                output += '</div><!-- end .calendar-week -->';
+            }
         }
-
-        output += `
-        <div class="calendar-day${(dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '')}" id="calendar-day-${Utils.getDateKey(currentDay)}">
-            <div class="p-1">
-                <span class="calendar-label-day">
-                    <span class="d-md-none">${weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1]}</span> 
-                    ${currentDay.getDate()}
-                    <span class="badge badge-pill badge-light float-right calendar-day-duration-js d-none" title="Total tasks duration">Unknown</span>
-                </span>
-                ${timesOfDayHtml}
-            </div>
-        </div>`; // [3]
-
-        if (currentDay.getDay() === 6 || currentDay.getDate() === Utils.getLastDayOfMonth(currentDay.getFullYear(), currentDay.getMonth()) || dayCounter === Utils.calendarDaysLimit) { // [3]
-            output += '</div><!-- end .calendar-week -->';
+    
+        var dayCounter = 0; // [5]
+    
+        for (var i = 0; i <= Utils.calendarDaysLimit; i++) { // [5]
+            var currentDay = new Date(today);
+            currentDay.setDate(currentDay.getDate() + dayCounter);
+            currentDay.setHours(0, 0, 0, 0);
+    
+            if (currentDay.getMonth() != thisMonth) { // [5]
+                output += `
+                <div class="calendar-label-month">${Utils.monthNames[currentDay.getMonth()][0]} ${currentDay.getFullYear()}</div>
+                ${weekLabels}`; // [5]
+    
+                thisMonth = currentDay.getMonth(); // [5]
+            }
+    
+            if (currentDay.getDay() === 0 || currentDay.getDate() === 1) { // [5]
+                output += '<div class="calendar-week">';
+            }
+    
+            var timesOfDay = ['morning', 'afternoon', 'evening', 'whenever'];
+            var timesOfDayHtml = '';
+    
+            for (var j = 0; j < timesOfDay.length; j++) {
+                timesOfDayHtml += `
+                <div class="calendar-day-${timesOfDay[j]}-js d-none">
+                    <div class="calendar-label-timeofday calendar-label-timeofday-js">
+                        <small>${timesOfDay[j].charAt(0).toUpperCase() + timesOfDay[j].slice(1)}:</small>
+                        <span class="badge badge-pill badge-light float-right calendar-timeofday-duration-js d-none" title="${timesOfDay[j]} tasks duration">Unknown</span>
+                    </div>
+                    <div class="calendar-day-tasks-js"></div>
+                </div>`;
+            }
+    
+            output += `
+            <div class="calendar-day${(dayCounter % 2 === 0 ? '' : ' calendar-day-alternate') + (currentDay.getDay() === 0 || currentDay.getDay() === 6 ? ' calendar-day-weekend' : '') + (currentDay.getDate() === 1 ? ' calendar-day-offset' + currentDay.getDay() : '')}" id="calendar-day-${Utils.getDateKey(currentDay)}">
+                <div class="p-1">
+                    <span class="calendar-label-day">
+                        <span class="d-md-none">${weekDayNames[currentDay.getDay()][1] + ', ' + Utils.monthNames[thisMonth][1]}</span> 
+                        ${currentDay.getDate()}
+                        <span class="badge badge-pill badge-light float-right calendar-day-duration-js d-none" title="Total tasks duration">Unknown</span>
+                    </span>
+                    ${timesOfDayHtml}
+                </div>
+            </div>`; // [5]
+    
+            if (currentDay.getDay() === 6 || currentDay.getDate() === Utils.getLastDayOfMonth(currentDay.getFullYear(), currentDay.getMonth()) || dayCounter === Utils.calendarDaysLimit) { // [5]
+                output += '</div><!-- end .calendar-week -->';
+            }
+    
+            dayCounter = dayCounter + 1; // [5]
         }
-
-        dayCounter = dayCounter + 1; // [3]
+    
+        $('#strategitica-calendar').html(output); // [6]
     }
-
-    $('#strategitica-calendar').html(output); // [4]
 }
 
 /**
@@ -225,6 +252,8 @@ function loadCalendar() {
  *      day it is.
  */
 function loadTasks() {
+    loadCalendar();
+
     var tasks = user.tasks;
     let datesWithTasksDue = {}; // [1]
 
