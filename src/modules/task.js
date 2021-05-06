@@ -680,7 +680,7 @@ export class Task {
 
         var taskDuration = task.duration();
 
-        return '<button type="button" class="badge badge-task badge-task-js badge-' + badgeDifficultyClass + ' badge-' + badgeValueClass + '" data-taskid="' + task.id + '"><span class="badge-title badge-title-js">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</span><span class="sr-only">(Task value: ' + badgeValueDescription + '; Task difficulty: ' + badgeDifficultyDescription + ')</span>' + (taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : '') + '</button>';
+        return `<button type="button" class="badge badge-task badge-task-js badge-${badgeDifficultyClass} badge-${badgeValueClass}" data-taskid="${task.id}"><span class="badge-title badge-title-js">${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.text.trim())))).html()}</span><span class="sr-only">(Task value: ${badgeValueDescription}; Task difficulty: ${badgeDifficultyDescription})</span>${taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : ''}</button>`;
     }
 
     /**
@@ -691,10 +691,10 @@ export class Task {
         var task = this;
         var tooltipHtml = '';
 
-        tooltipHtml += '<h3 class="popover-header">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</h3>';
+        tooltipHtml += `<h3 class="popover-header">${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.text.trim())))).html()}</h3>`;
 
         if (task.notes.trim() != null && task.notes.trim() != '') {
-            tooltipHtml += '<div>' + md.render(task.notes.trim()) + '</div>';
+            tooltipHtml += `<div>${md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.notes.trim())))}</div>`;
         }
 
         if (task.checklist != null) {
@@ -706,7 +706,7 @@ export class Task {
                     var iconClass = (value.completed === true ? 'far fa-check-square' : 'far fa-square');
                     var iconAriaLabel = (value.completed === true ? 'Complete' : 'Incomplete');
 
-                    tooltipHtml += '<li' + (liClasses != '' ? ' class="' + liClasses + '"' : '') + ' data-itemid="' + value.id + '"><i class="' + iconClass + ' task-checklist-icon-js" aria-label="' + iconAriaLabel + '"></i> ' + $(md.render(value.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</li>';
+                    tooltipHtml += `<li${(liClasses != '' ? ' class="' + liClasses + '"' : '')} data-itemid="${value.id}"><i class="${iconClass} task-checklist-icon-js" aria-label="${iconAriaLabel}"></i> ${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(value.text.trim())))).html()}</li>`;
                 });
 
                 tooltipHtml += '</ul>';
