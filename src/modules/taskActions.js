@@ -514,7 +514,7 @@ export function openModal(taskId, user) {
 
         $('#task-text').val(task.text ? task.text : '');
         $('#task-type').val(task.type);
-        $('#task-notes').html(task.notes.trim());
+        $('#task-notes').val(task.notes.trim());
 
         $('#task-difficulty option:selected').prop('selected', false);
         if (task.priority < 1) {
