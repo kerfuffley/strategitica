@@ -57,18 +57,55 @@ export class User {
                 user.tasks = allTasks;
 
                 if (userInfo[0].data !== null) {
-                    user.name = userInfo[0].data.auth.local.username;
-                    user.displayName = userInfo[0].data.profile.name;
-                    user.class = userInfo[0].data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : userInfo[0].data.stats.class.charAt(0).toUpperCase() + userInfo[0].data.stats.class.slice(1);
-                    user.level = userInfo[0].data.stats.lvl;
-                    user.hp = userInfo[0].data.stats.hp;
-                    user.hpMax = Math.floor(userInfo[0].data.stats.maxHealth);
-                    user.exp = Math.floor(userInfo[0].data.stats.exp);
-                    user.expToNextLevel = userInfo[0].data.stats.toNextLevel;
-                    user.mp = Math.floor(userInfo[0].data.stats.mp);
-                    user.mpMax = userInfo[0].data.stats.maxMP;
-                    user.isSleeping = userInfo[0].data.preferences.sleep;
-                    user.dayStart = userInfo[0].data.preferences.dayStart;
+                    if ('auth' in userInfo[0].data) {
+                        if ('local' in userInfo[0].data.auth) {
+                            if ('username' in userInfo[0].data.auth.local) {
+                                user.name = userInfo[0].data.auth.local.username;
+                            }
+                        }
+                    }
+
+                    if ('profile' in userInfo[0].data) {
+                        if ('name' in userInfo[0].data.profile) {
+                            user.displayName = userInfo[0].data.profile.name;
+                        }
+                    }
+                    
+                    if ('stats' in userInfo[0].data) {
+                        if ('class' in userInfo[0].data.stats) {
+                            user.class = userInfo[0].data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : userInfo[0].data.stats.class.charAt(0).toUpperCase() + userInfo[0].data.stats.class.slice(1);
+                        }
+                        if ('lvl' in userInfo[0].data.stats) {
+                            user.level = userInfo[0].data.stats.lvl;
+                        }
+                        if ('hp' in userInfo[0].data.stats) {
+                            user.hp = userInfo[0].data.stats.hp;
+                        }
+                        if ('maxHealth' in userInfo[0].data.stats) {
+                            user.hpMax = Math.floor(userInfo[0].data.stats.maxHealth);
+                        }
+                        if ('exp' in userInfo[0].data.stats) {
+                            user.exp = Math.floor(userInfo[0].data.stats.exp);
+                        }
+                        if ('toNextLevel' in userInfo[0].data.stats) {
+                            user.expToNextLevel = userInfo[0].data.stats.toNextLevel;
+                        }
+                        if ('mp' in userInfo[0].data.stats) {
+                            user.mp = Math.floor(userInfo[0].data.stats.mp);
+                        }
+                        if ('maxMP' in userInfo[0].data.stats) {
+                            user.mpMax = userInfo[0].data.stats.maxMP;
+                        }
+                    }
+
+                    if ('preferences' in userInfo[0].data) {
+                        if ('sleep' in userInfo[0].data.preferences) {
+                            user.isSleeping = userInfo[0].data.preferences.sleep;
+                        }
+                        if ('dayStart' in userInfo[0].data.preferences) {
+                            user.dayStart = userInfo[0].data.preferences.dayStart;
+                        }
+                    }
 
                     var message = `User info loaded successfully. Here's some info about you:<br>
                          Username: @${user.name}<br>
@@ -267,18 +304,55 @@ export class User {
                 $.ajax(options)
                 .done(function (data) {
                     if (data.data !== null) {
-                        user.name = data.data.auth.local.username;
-                        user.displayName = data.data.profile.name;
-                        user.class = data.data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : data.data.stats.class.charAt(0).toUpperCase() + data.data.stats.class.slice(1);
-                        user.level = data.data.stats.lvl;
-                        user.hp = data.data.stats.hp;
-                        user.hpMax = Math.floor(data.data.stats.maxHealth);
-                        user.exp = Math.floor(data.data.stats.exp);
-                        user.expToNextLevel = data.data.stats.toNextLevel;
-                        user.mp = Math.floor(data.data.stats.mp);
-                        user.mpMax = data.data.stats.maxMP;
-                        user.isSleeping = data.data.preferences.sleep;
-                        user.dayStart = data.data.preferences.dayStart;
+                        if ('auth' in data.data) {
+                            if ('local' in data.data.auth) {
+                                if ('username' in data.data.auth.local) {
+                                    user.name = data.data.auth.local.username;
+                                }
+                            }
+                        }
+    
+                        if ('profile' in data.data) {
+                            if ('name' in data.data.profile) {
+                                user.displayName = data.data.profile.name;
+                            }
+                        }
+                        
+                        if ('stats' in data.data) {
+                            if ('class' in data.data.stats) {
+                                user.class = data.data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : data.data.stats.class.charAt(0).toUpperCase() + data.data.stats.class.slice(1);
+                            }
+                            if ('lvl' in data.data.stats) {
+                                user.level = data.data.stats.lvl;
+                            }
+                            if ('hp' in data.data.stats) {
+                                user.hp = data.data.stats.hp;
+                            }
+                            if ('maxHealth' in data.data.stats) {
+                                user.hpMax = Math.floor(data.data.stats.maxHealth);
+                            }
+                            if ('exp' in data.data.stats) {
+                                user.exp = Math.floor(data.data.stats.exp);
+                            }
+                            if ('toNextLevel' in data.data.stats) {
+                                user.expToNextLevel = data.data.stats.toNextLevel;
+                            }
+                            if ('mp' in data.data.stats) {
+                                user.mp = Math.floor(data.data.stats.mp);
+                            }
+                            if ('maxMP' in data.data.stats) {
+                                user.mpMax = data.data.stats.maxMP;
+                            }
+                        }
+    
+                        if ('preferences' in data.data) {
+                            if ('sleep' in data.data.preferences) {
+                                user.isSleeping = data.data.preferences.sleep;
+                            }
+                            if ('dayStart' in data.data.preferences) {
+                                user.dayStart = data.data.preferences.dayStart;
+                            }
+                        }
     
                         var message = `User info loaded successfully. Here's some info about you:<br>
                              Username: @${user.name}<br>
