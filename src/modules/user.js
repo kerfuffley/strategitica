@@ -55,70 +55,9 @@ export class User {
                 });
 
                 user.tasks = allTasks;
-
-                if (userInfo[0].data !== null) {
-                    if ('auth' in userInfo[0].data) {
-                        if ('local' in userInfo[0].data.auth) {
-                            if ('username' in userInfo[0].data.auth.local) {
-                                user.name = userInfo[0].data.auth.local.username;
-                            }
-                        }
-                    }
-
-                    if ('profile' in userInfo[0].data) {
-                        if ('name' in userInfo[0].data.profile) {
-                            user.displayName = userInfo[0].data.profile.name;
-                        }
-                    }
-                    
-                    if ('stats' in userInfo[0].data) {
-                        if ('class' in userInfo[0].data.stats) {
-                            user.class = userInfo[0].data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : userInfo[0].data.stats.class.charAt(0).toUpperCase() + userInfo[0].data.stats.class.slice(1);
-                        }
-                        if ('lvl' in userInfo[0].data.stats) {
-                            user.level = userInfo[0].data.stats.lvl;
-                        }
-                        if ('hp' in userInfo[0].data.stats) {
-                            user.hp = userInfo[0].data.stats.hp;
-                        }
-                        if ('maxHealth' in userInfo[0].data.stats) {
-                            user.hpMax = Math.floor(userInfo[0].data.stats.maxHealth);
-                        }
-                        if ('exp' in userInfo[0].data.stats) {
-                            user.exp = Math.floor(userInfo[0].data.stats.exp);
-                        }
-                        if ('toNextLevel' in userInfo[0].data.stats) {
-                            user.expToNextLevel = userInfo[0].data.stats.toNextLevel;
-                        }
-                        if ('mp' in userInfo[0].data.stats) {
-                            user.mp = Math.floor(userInfo[0].data.stats.mp);
-                        }
-                        if ('maxMP' in userInfo[0].data.stats) {
-                            user.mpMax = userInfo[0].data.stats.maxMP;
-                        }
-                    }
-
-                    if ('preferences' in userInfo[0].data) {
-                        if ('sleep' in userInfo[0].data.preferences) {
-                            user.isSleeping = userInfo[0].data.preferences.sleep;
-                        }
-                        if ('dayStart' in userInfo[0].data.preferences) {
-                            user.dayStart = userInfo[0].data.preferences.dayStart;
-                        }
-                    }
-
-                    var message = `User info loaded successfully. Here's some info about you:<br>
-                         Username: @${user.name}<br>
-                         Display Name: ${user.displayName}<br>
-                         Class: ${user.class}<br>
-                         Level: ${user.level}<br>
-                         HP: ${user.hp} / ${user.hpMax}<br>
-                         Experience: ${user.exp} / ${user.expToNextLevel}<br>
-                         MP: ${user.mp} / ${user.mpMax}<br>
-                         Resting in the tavern: ${user.isSleeping}<br>
-                         Day start: ${user.dayStart}<br>
-                         Tags: ${Object.values(user.tags)}`;
-                    Utils.updateLogs(message);
+                
+                if ('data' in userInfo[0]) {
+                    user.setUserInfo(userInfo[0].data);
                 }
 
                 if (onComplete) {
@@ -303,69 +242,8 @@ export class User {
             try {
                 $.ajax(options)
                 .done(function (data) {
-                    if (data.data !== null) {
-                        if ('auth' in data.data) {
-                            if ('local' in data.data.auth) {
-                                if ('username' in data.data.auth.local) {
-                                    user.name = data.data.auth.local.username;
-                                }
-                            }
-                        }
-    
-                        if ('profile' in data.data) {
-                            if ('name' in data.data.profile) {
-                                user.displayName = data.data.profile.name;
-                            }
-                        }
-                        
-                        if ('stats' in data.data) {
-                            if ('class' in data.data.stats) {
-                                user.class = data.data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : data.data.stats.class.charAt(0).toUpperCase() + data.data.stats.class.slice(1);
-                            }
-                            if ('lvl' in data.data.stats) {
-                                user.level = data.data.stats.lvl;
-                            }
-                            if ('hp' in data.data.stats) {
-                                user.hp = data.data.stats.hp;
-                            }
-                            if ('maxHealth' in data.data.stats) {
-                                user.hpMax = Math.floor(data.data.stats.maxHealth);
-                            }
-                            if ('exp' in data.data.stats) {
-                                user.exp = Math.floor(data.data.stats.exp);
-                            }
-                            if ('toNextLevel' in data.data.stats) {
-                                user.expToNextLevel = data.data.stats.toNextLevel;
-                            }
-                            if ('mp' in data.data.stats) {
-                                user.mp = Math.floor(data.data.stats.mp);
-                            }
-                            if ('maxMP' in data.data.stats) {
-                                user.mpMax = data.data.stats.maxMP;
-                            }
-                        }
-    
-                        if ('preferences' in data.data) {
-                            if ('sleep' in data.data.preferences) {
-                                user.isSleeping = data.data.preferences.sleep;
-                            }
-                            if ('dayStart' in data.data.preferences) {
-                                user.dayStart = data.data.preferences.dayStart;
-                            }
-                        }
-    
-                        var message = `User info loaded successfully. Here's some info about you:<br>
-                             Username: @${user.name}<br>
-                             Display Name: ${user.displayName}<br>
-                             Class: ${user.class}<br>
-                             Level: ${user.level}<br>
-                             HP: ${user.hp} / ${user.hpMax}<br>
-                             Experience: ${user.exp} / ${user.expToNextLevel}<br>
-                             MP: ${user.mp} / ${user.mpMax}<br>
-                             Resting in the tavern: ${user.isSleeping}<br>
-                             Day start: ${user.dayStart}<br>
-                             Tags: ${Object.values(user.tags)}`;
-                        Utils.updateLogs(message);
+                    if ('data' in data) {
+                        user.setUserInfo(data.data);
                     }
 
                     onComplete();
@@ -390,6 +268,75 @@ export class User {
         }
         else {
             return $.ajax(options);
+        }
+    }
+
+    setUserInfo(data) {
+        var user = this;
+
+        if (data !== null) {
+            if ('auth' in data) {
+                if ('local' in data.auth) {
+                    if ('username' in data.auth.local) {
+                        user.name = data.auth.local.username;
+                    }
+                }
+            }
+
+            if ('profile' in data) {
+                if ('name' in data.profile) {
+                    user.displayName = data.profile.name;
+                }
+            }
+            
+            if ('stats' in data) {
+                if ('class' in data.stats) {
+                    user.class = data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : data.stats.class.charAt(0).toUpperCase() + data.stats.class.slice(1);
+                }
+                if ('lvl' in data.stats) {
+                    user.level = data.stats.lvl;
+                }
+                if ('hp' in data.stats) {
+                    user.hp = data.stats.hp;
+                }
+                if ('maxHealth' in data.stats) {
+                    user.hpMax = Math.floor(data.stats.maxHealth);
+                }
+                if ('exp' in data.stats) {
+                    user.exp = Math.floor(data.stats.exp);
+                }
+                if ('toNextLevel' in data.stats) {
+                    user.expToNextLevel = data.stats.toNextLevel;
+                }
+                if ('mp' in data.stats) {
+                    user.mp = Math.floor(data.stats.mp);
+                }
+                if ('maxMP' in data.stats) {
+                    user.mpMax = data.stats.maxMP;
+                }
+            }
+
+            if ('preferences' in data) {
+                if ('sleep' in data.preferences) {
+                    user.isSleeping = data.preferences.sleep;
+                }
+                if ('dayStart' in data.preferences) {
+                    user.dayStart = data.preferences.dayStart;
+                }
+            }
+
+            var message = `User info loaded successfully. Here's some info about you:<br>
+                 Username: @${user.name}<br>
+                 Display Name: ${user.displayName}<br>
+                 Class: ${user.class}<br>
+                 Level: ${user.level}<br>
+                 HP: ${user.hp} / ${user.hpMax}<br>
+                 Experience: ${user.exp} / ${user.expToNextLevel}<br>
+                 MP: ${user.mp} / ${user.mpMax}<br>
+                 Resting in the tavern: ${user.isSleeping}<br>
+                 Day start: ${user.dayStart}<br>
+                 Tags: ${Object.values(user.tags)}`;
+            Utils.updateLogs(message);
         }
     }
 
