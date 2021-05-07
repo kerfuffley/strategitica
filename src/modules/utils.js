@@ -61,6 +61,14 @@ if (!isNaN(calendarDaysLimitFromParam)) {
 
 export const calendarDaysLimit = calendarDaysLimitTemp;
 
+export function escapeQuotes(string) {
+    return string.replace(/'/g, '&apos;').replace(/"/g, '&quot;');
+}
+
+export function escapeHtmlBrackets(string) {
+    return string.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
 /**
  * You can't just output a Date variable in JS and expect it to look readable,
  * and for debugging purposes, I want things to be readable. So this is here to
@@ -132,8 +140,8 @@ export function formatDuration(durationInMinutes) {
 
 export function updateToast(type, title, body, toastToHide) {
     var el = $('#strategitica-toast-' + type);
-    el.find('.toast-title-js').html(title.replace('<', '&lt;').replace('>', '&gt;'));
-    el.find('.toast-body-js').html(body.replace('<', '&lt;').replace('>', '&gt;'));
+    el.find('.toast-title-js').html(escapeHtmlBrackets(escapeQuotes(title)));
+    el.find('.toast-body-js').html(escapeHtmlBrackets(escapeQuotes(body)));
 
     el.toast('show');
 

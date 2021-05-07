@@ -20,8 +20,8 @@ export class Task {
         this.reminders = typeof taskObject.reminders !== 'undefined' ? (Array.isArray(taskObject.reminders) ? taskObject.reminders : []) : [];
         this.frequency = typeof taskObject.frequency === 'string' ? taskObject.frequency : '';
         this.repeat = typeof taskObject.repeat === 'object' ? taskObject.repeat : null,
-        this.everyX = typeof taskObject.everyX === 'number' ? taskObject.everyX : 0,
-        this.daysOfMonth = typeof taskObject.daysOfMonth !== 'undefined' ? (Array.isArray(taskObject.daysOfMonth) ? taskObject.daysOfMonth : []) : [];
+            this.everyX = typeof taskObject.everyX === 'number' ? taskObject.everyX : 0,
+            this.daysOfMonth = typeof taskObject.daysOfMonth !== 'undefined' ? (Array.isArray(taskObject.daysOfMonth) ? taskObject.daysOfMonth : []) : [];
         this.weeksOfMonth = typeof taskObject.weeksOfMonth !== 'undefined' ? (Array.isArray(taskObject.weeksOfMonth) ? taskObject.weeksOfMonth : []) : [];
         this.startDate = typeof taskObject.startDate === 'string' ? taskObject.startDate : '';
         this.completed = typeof taskObject.completed === 'boolean' ? taskObject.completed : null;
@@ -62,7 +62,7 @@ export class Task {
         var hasTag = Object.keys(tags).some(function (i) {
             return tags[i] === tagId;
         });
-    
+
         return hasTag;
     }
 
@@ -72,7 +72,7 @@ export class Task {
 
         if (Object.keys(userTagNames).length > 0) {
             var oneTimeDailyTagId = '';
-    
+
             Object.keys(userTagNames).forEach(function (key) {
                 if (userTagNames[key].endsWith('[strategitica|1td]')) {
                     if (oneTimeDailyTagId === '') {
@@ -83,7 +83,7 @@ export class Task {
                     }
                 }
             });
-    
+
             if (oneTimeDailyTagId !== '') {
                 return task.hasTag(oneTimeDailyTagId);
             }
@@ -99,7 +99,7 @@ export class Task {
 
         if (Object.keys(userTagNames).length > 0) {
             var timeOfDayTagId = '';
-    
+
             Object.keys(userTagNames).forEach(function (key) {
                 if (userTagNames[key].endsWith('[strategitica|' + timeOfDay + ']')) {
                     if (timeOfDayTagId === '') {
@@ -110,7 +110,7 @@ export class Task {
                     }
                 }
             });
-    
+
             if (timeOfDayTagId !== '') {
                 return task.hasTag(timeOfDayTagId);
             }
@@ -161,7 +161,7 @@ export class Task {
                 duration = 0;
             }
         }
-        
+
         return duration;
     }
 
@@ -249,7 +249,7 @@ export class Task {
                 var taskStartDate = new Date(task.startDate);
                 var taskStartMonth = Utils.monthNames[taskStartDate.getMonth()][0];
                 var taskStartDay = taskStartDate.getDate();
-        
+
                 frequencyHtml += 'Every ' + frequencyName + ' on ' + taskStartMonth + ' ' + taskStartDay + Utils.getNumberOrdinal(taskStartDay);
             }
             else {
@@ -258,31 +258,31 @@ export class Task {
                         var plural = 's';
                         var everyXString = task.everyX.toString();
                         var numberOrdinal = '';
-        
+
                         if (task.frequency === 'weekly' && frequencyName !== 'week') {
                             plural = '';
                             numberOrdinal = Utils.getNumberOrdinal(task.everyX);
                         }
-        
+
                         frequencyName = task.everyX + numberOrdinal + ' ' + frequencyName + plural;
                     }
                     else if (task.everyX === 2) {
                         frequencyName = 'other ' + frequencyName;
                     }
                 }
-        
+
                 frequencyHtml += 'Every ' + frequencyName;
 
                 if (task.daysOfMonth.length > 0) {
                     frequencyHtml += ' on ';
                     var daysOfMonthWithOrdinal = [];
-        
+
                     task.daysOfMonth.forEach(function (value) {
                         daysOfMonthWithOrdinal.push('the ' + value + Utils.getNumberOrdinal(value));
                     });
-        
+
                     var daysOfMonthString = daysOfMonthWithOrdinal.join('-');
-        
+
                     if (daysOfMonthWithOrdinal.length > 2) {
                         var lastSeparatorIndex = daysOfMonthString.lastIndexOf('-');
                         daysOfMonthString = daysOfMonthString.slice(0, lastSeparatorIndex) + daysOfMonthString.slice(lastSeparatorIndex).replace('-', ' and ');
@@ -291,21 +291,21 @@ export class Task {
                     else {
                         daysOfMonthString = daysOfMonthString.replace(/-/g, ' and ');
                     }
-        
+
                     frequencyHtml += daysOfMonthString;
                 }
-        
+
                 if (task.weeksOfMonth != null && task.weeksOfMonth.length > 0) {
                     frequencyHtml += ' on ';
                     var weeksOfMonthWithOrdinal = [];
-        
+
                     task.weeksOfMonth.forEach(function (value) {
                         var week = value + 1;
                         weeksOfMonthWithOrdinal.push('the ' + week + Utils.getNumberOrdinal(week));
                     });
-        
+
                     var weeksOfMonthString = weeksOfMonthWithOrdinal.join('-');
-        
+
                     if (weeksOfMonthWithOrdinal.length > 2) {
                         var lastSeparatorIndex = weeksOfMonthString.lastIndexOf('-');
                         weeksOfMonthString = weeksOfMonthString.slice(0, lastSeparatorIndex) + weeksOfMonthString.slice(lastSeparatorIndex).replace('-', ' and ');
@@ -314,18 +314,18 @@ export class Task {
                     else {
                         weeksOfMonthString = weeksOfMonthString.replace(/-/g, ' and ');
                     }
-        
+
                     frequencyHtml += weeksOfMonthString + ' week' + (weeksOfMonthWithOrdinal.length > 1 ? 's' : '');
-        
+
                     if (task.repeat != null) {
                         var repeatingDays = [];
-        
+
                         for (const property in task.repeat) {
                             if (task.repeat[property] === true) {
                                 repeatingDays.push(weekdayNames[property]);
                             }
                         }
-        
+
                         var repeatingDaysString = repeatingDays.join('-');
                         if (repeatingDays.length > 2) {
                             var lastSeparatorIndex = repeatingDaysString.lastIndexOf('-');
@@ -335,7 +335,7 @@ export class Task {
                         else {
                             repeatingDaysString = repeatingDaysString.replace(/-/g, ' and ');
                         }
-        
+
                         frequencyHtml += ' on ' + repeatingDaysString;
                     }
                 }
@@ -502,7 +502,7 @@ export class Task {
 
         if (startDate !== null && startDate <= endDate) { // [3]
             dates.push(Utils.getDateKey(startDate)); // [4]
-    
+
             if (task.type === 'daily' && !task.isOneTimeDaily()) { // [5]
                 var frequency = task.frequency;
                 var repeat = task.repeat;
@@ -562,9 +562,9 @@ export class Task {
                         byweekday.push(RRule.SA); // [6d]
                     }
                 }
-    
+
                 var rule = null;
-    
+
                 if (byweekday.length > 0) {
                     if (bysetpos.length > 0) {
                         rule = new RRule({ // [7]
@@ -607,7 +607,7 @@ export class Task {
                         wkst: RRule.SU
                     }).all();
                 }
-    
+
                 if (rule !== null && rule.length > 0) {
                     for (var i = 0; i < rule.length; i++) {
                         var thisDate = Utils.getDateKey(rule[i]);
@@ -634,7 +634,7 @@ export class Task {
         if (typeof task.priority === 'number') {
             if (task.priority === .1) {
                 badgeDifficultyClass = 'difficulty1';
-                badgeDifficultyDescription = 'Trivial';   
+                badgeDifficultyDescription = 'Trivial';
             }
             else if (task.priority === 1) {
                 badgeDifficultyClass = 'difficulty2';
@@ -685,7 +685,7 @@ export class Task {
 
         var taskDuration = task.duration();
 
-        return '<button type="button" class="badge badge-task badge-task-js badge-' + badgeDifficultyClass + ' badge-' + badgeValueClass + '" data-taskid="' + task.id + '"><span class="badge-title badge-title-js">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</span><span class="sr-only">(Task value: ' + badgeValueDescription + '; Task difficulty: ' + badgeDifficultyDescription + ')</span>' + (taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : '') + '</button>';
+        return `<button type="button" class="badge badge-task badge-task-js badge-${badgeDifficultyClass} badge-${badgeValueClass}" data-taskid="${task.id}"><span class="badge-title badge-title-js">${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.text.trim())))).html()}</span><span class="sr-only">(Task value: ${badgeValueDescription}; Task difficulty: ${badgeDifficultyDescription})</span>${taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : ''}</button>`;
     }
 
     /**
@@ -696,10 +696,10 @@ export class Task {
         var task = this;
         var tooltipHtml = '';
 
-        tooltipHtml += '<h3 class="popover-header">' + $(md.render(task.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</h3>';
+        tooltipHtml += `<h3 class="popover-header">${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.text.trim())))).html()}</h3>`;
 
         if (task.notes.trim() != null && task.notes.trim() != '') {
-            tooltipHtml += '<div>' + md.render(task.notes.trim()) + '</div>';
+            tooltipHtml += `<div>${md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.notes.trim())))}</div>`;
         }
 
         if (task.checklist.length > 0) {
@@ -710,7 +710,7 @@ export class Task {
                 var iconClass = (value.completed === true ? 'far fa-check-square' : 'far fa-square');
                 var iconAriaLabel = (value.completed === true ? 'Complete' : 'Incomplete');
 
-                tooltipHtml += '<li' + (liClasses != '' ? ' class="' + liClasses + '"' : '') + ' data-itemid="' + value.id + '"><i class="' + iconClass + ' task-checklist-icon-js" aria-label="' + iconAriaLabel + '"></i> ' + $(md.render(value.text.trim().replace('<', '&lt;').replace('>', '&gt;'))).html() + '</li>';
+                tooltipHtml += `<li${(liClasses != '' ? ' class="' + liClasses + '"' : '')} data-itemid="${value.id}"><i class="${iconClass} task-checklist-icon-js" aria-label="${iconAriaLabel}"></i> ${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(value.text.trim())))).html()}</li>`;
             });
 
             tooltipHtml += '</ul>';
