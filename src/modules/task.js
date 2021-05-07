@@ -19,9 +19,9 @@ export class Task {
         this.priority = typeof taskObject.priority === 'number' ? taskObject.priority : 0;
         this.reminders = typeof taskObject.reminders !== 'undefined' ? (Array.isArray(taskObject.reminders) ? taskObject.reminders : []) : [];
         this.frequency = typeof taskObject.frequency === 'string' ? taskObject.frequency : '';
-        this.repeat = typeof taskObject.repeat === 'object' ? taskObject.repeat : null,
-            this.everyX = typeof taskObject.everyX === 'number' ? taskObject.everyX : 0,
-            this.daysOfMonth = typeof taskObject.daysOfMonth !== 'undefined' ? (Array.isArray(taskObject.daysOfMonth) ? taskObject.daysOfMonth : []) : [];
+        this.repeat = typeof taskObject.repeat === 'object' ? taskObject.repeat : null;
+        this.everyX = typeof taskObject.everyX === 'number' ? taskObject.everyX : 0;
+        this.daysOfMonth = typeof taskObject.daysOfMonth !== 'undefined' ? (Array.isArray(taskObject.daysOfMonth) ? taskObject.daysOfMonth : []) : [];
         this.weeksOfMonth = typeof taskObject.weeksOfMonth !== 'undefined' ? (Array.isArray(taskObject.weeksOfMonth) ? taskObject.weeksOfMonth : []) : [];
         this.startDate = typeof taskObject.startDate === 'string' ? taskObject.startDate : '';
         this.completed = typeof taskObject.completed === 'boolean' ? taskObject.completed : null;
