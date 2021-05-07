@@ -9,26 +9,26 @@ export class Task {
      * @param {User} user - The user the task belongs to
      */
     constructor(taskObject, user) {
-        this.id = taskObject.id;
+        this.id = typeof taskObject.id === 'string' ? taskObject.id : '';
         this.user = user;
-        this.text = taskObject.text;
-        this.type = taskObject.type;
-        this.tags = taskObject.tags ? taskObject.tags : [];
-        this.notes = taskObject.notes ? taskObject.notes : '';
-        this.date = taskObject.date ? taskObject.date : null;
-        this.priority = taskObject.priority ? taskObject.priority : null;
-        this.reminders = taskObject.reminders ? taskObject.reminders : [];
-        this.frequency = taskObject.frequency ? taskObject.frequency : null;
-        this.repeat = taskObject.repeat ? taskObject.repeat : null,
-        this.everyX = taskObject.everyX ? taskObject.everyX : null,
-        this.daysOfMonth = taskObject.daysOfMonth ? taskObject.daysOfMonth : null;
-        this.weeksOfMonth = taskObject.weeksOfMonth ? taskObject.weeksOfMonth : null;
-        this.startDate = taskObject.startDate ? taskObject.startDate : null;
-        this.completed = taskObject.completed ? taskObject.completed : null;
-        this.isDue = taskObject.isDue ? taskObject.isDue : null;
-        this.nextDue = taskObject.nextDue ? taskObject.nextDue : null;
-        this.checklist = taskObject.checklist ? taskObject.checklist : [];
-        this.value = taskObject.value ? taskObject.value : 0;
+        this.text = typeof taskObject.text === 'string' ? taskObject.text : '';
+        this.type = typeof taskObject.type === 'string' ? taskObject.type : '';
+        this.tags = typeof taskObject.tags !== 'undefined' ? (Array.isArray(taskObject.tags) ? taskObject.tags : []) : [];
+        this.notes = typeof taskObject.notes === 'string' ? taskObject.notes : '';
+        this.date = typeof taskObject.date === 'string' ? taskObject.date : '';
+        this.priority = typeof taskObject.priority === 'number' ? taskObject.priority : 0;
+        this.reminders = typeof taskObject.reminders !== 'undefined' ? (Array.isArray(taskObject.reminders) ? taskObject.reminders : []) : [];
+        this.frequency = typeof taskObject.frequency === 'string' ? taskObject.frequency : '';
+        this.repeat = typeof taskObject.repeat === 'object' ? taskObject.repeat : null;
+        this.everyX = typeof taskObject.everyX === 'number' ? taskObject.everyX : 0;
+        this.daysOfMonth = typeof taskObject.daysOfMonth !== 'undefined' ? (Array.isArray(taskObject.daysOfMonth) ? taskObject.daysOfMonth : []) : [];
+        this.weeksOfMonth = typeof taskObject.weeksOfMonth !== 'undefined' ? (Array.isArray(taskObject.weeksOfMonth) ? taskObject.weeksOfMonth : []) : [];
+        this.startDate = typeof taskObject.startDate === 'string' ? taskObject.startDate : '';
+        this.completed = typeof taskObject.completed === 'boolean' ? taskObject.completed : null;
+        this.isDue = typeof taskObject.isDue === 'boolean' ? taskObject.isDue : null;
+        this.nextDue = typeof taskObject.nextDue !== 'undefined' ? (Array.isArray(taskObject.nextDue) ? taskObject.nextDue : []) : [];
+        this.checklist = typeof taskObject.checklist !== 'undefined' ? (Array.isArray(taskObject.checklist) ? taskObject.checklist : []) : [];
+        this.value = typeof taskObject.value === 'number' ? taskObject.value : 0;
         this.timeOfDay = 'whenever';
     }
 
@@ -62,7 +62,7 @@ export class Task {
         var hasTag = Object.keys(tags).some(function (i) {
             return tags[i] === tagId;
         });
-    
+
         return hasTag;
     }
 
@@ -72,7 +72,7 @@ export class Task {
 
         if (Object.keys(userTagNames).length > 0) {
             var oneTimeDailyTagId = '';
-    
+
             Object.keys(userTagNames).forEach(function (key) {
                 if (userTagNames[key].endsWith('[strategitica|1td]')) {
                     if (oneTimeDailyTagId === '') {
@@ -83,7 +83,7 @@ export class Task {
                     }
                 }
             });
-    
+
             if (oneTimeDailyTagId !== '') {
                 return task.hasTag(oneTimeDailyTagId);
             }
@@ -99,7 +99,7 @@ export class Task {
 
         if (Object.keys(userTagNames).length > 0) {
             var timeOfDayTagId = '';
-    
+
             Object.keys(userTagNames).forEach(function (key) {
                 if (userTagNames[key].endsWith('[strategitica|' + timeOfDay + ']')) {
                     if (timeOfDayTagId === '') {
@@ -110,7 +110,7 @@ export class Task {
                     }
                 }
             });
-    
+
             if (timeOfDayTagId !== '') {
                 return task.hasTag(timeOfDayTagId);
             }
@@ -161,7 +161,7 @@ export class Task {
                 duration = 0;
             }
         }
-        
+
         return duration;
     }
 
@@ -249,7 +249,7 @@ export class Task {
                 var taskStartDate = new Date(task.startDate);
                 var taskStartMonth = Utils.monthNames[taskStartDate.getMonth()][0];
                 var taskStartDay = taskStartDate.getDate();
-        
+
                 frequencyHtml += 'Every ' + frequencyName + ' on ' + taskStartMonth + ' ' + taskStartDay + Utils.getNumberOrdinal(taskStartDay);
             }
             else {
@@ -258,31 +258,31 @@ export class Task {
                         var plural = 's';
                         var everyXString = task.everyX.toString();
                         var numberOrdinal = '';
-        
+
                         if (task.frequency === 'weekly' && frequencyName !== 'week') {
                             plural = '';
                             numberOrdinal = Utils.getNumberOrdinal(task.everyX);
                         }
-        
+
                         frequencyName = task.everyX + numberOrdinal + ' ' + frequencyName + plural;
                     }
                     else if (task.everyX === 2) {
                         frequencyName = 'other ' + frequencyName;
                     }
                 }
-        
+
                 frequencyHtml += 'Every ' + frequencyName;
 
-                if (task.daysOfMonth != null && task.daysOfMonth.length > 0) {
+                if (task.daysOfMonth.length > 0) {
                     frequencyHtml += ' on ';
                     var daysOfMonthWithOrdinal = [];
-        
+
                     task.daysOfMonth.forEach(function (value) {
                         daysOfMonthWithOrdinal.push('the ' + value + Utils.getNumberOrdinal(value));
                     });
-        
+
                     var daysOfMonthString = daysOfMonthWithOrdinal.join('-');
-        
+
                     if (daysOfMonthWithOrdinal.length > 2) {
                         var lastSeparatorIndex = daysOfMonthString.lastIndexOf('-');
                         daysOfMonthString = daysOfMonthString.slice(0, lastSeparatorIndex) + daysOfMonthString.slice(lastSeparatorIndex).replace('-', ' and ');
@@ -291,21 +291,21 @@ export class Task {
                     else {
                         daysOfMonthString = daysOfMonthString.replace(/-/g, ' and ');
                     }
-        
+
                     frequencyHtml += daysOfMonthString;
                 }
-        
+
                 if (task.weeksOfMonth != null && task.weeksOfMonth.length > 0) {
                     frequencyHtml += ' on ';
                     var weeksOfMonthWithOrdinal = [];
-        
+
                     task.weeksOfMonth.forEach(function (value) {
                         var week = value + 1;
                         weeksOfMonthWithOrdinal.push('the ' + week + Utils.getNumberOrdinal(week));
                     });
-        
+
                     var weeksOfMonthString = weeksOfMonthWithOrdinal.join('-');
-        
+
                     if (weeksOfMonthWithOrdinal.length > 2) {
                         var lastSeparatorIndex = weeksOfMonthString.lastIndexOf('-');
                         weeksOfMonthString = weeksOfMonthString.slice(0, lastSeparatorIndex) + weeksOfMonthString.slice(lastSeparatorIndex).replace('-', ' and ');
@@ -314,18 +314,18 @@ export class Task {
                     else {
                         weeksOfMonthString = weeksOfMonthString.replace(/-/g, ' and ');
                     }
-        
+
                     frequencyHtml += weeksOfMonthString + ' week' + (weeksOfMonthWithOrdinal.length > 1 ? 's' : '');
-        
+
                     if (task.repeat != null) {
                         var repeatingDays = [];
-        
+
                         for (const property in task.repeat) {
                             if (task.repeat[property] === true) {
                                 repeatingDays.push(weekdayNames[property]);
                             }
                         }
-        
+
                         var repeatingDaysString = repeatingDays.join('-');
                         if (repeatingDays.length > 2) {
                             var lastSeparatorIndex = repeatingDaysString.lastIndexOf('-');
@@ -335,7 +335,7 @@ export class Task {
                         else {
                             repeatingDaysString = repeatingDaysString.replace(/-/g, ' and ');
                         }
-        
+
                         frequencyHtml += ' on ' + repeatingDaysString;
                     }
                 }
@@ -414,7 +414,7 @@ export class Task {
                 }
             }
 
-            if (firstDate === null && this.nextDue !== null && this.nextDue.length > 0) { // [4]
+            if (firstDate === null && this.nextDue.length > 0) { // [4]
                 var nextDue = this.nextDue;
                 var earliestNextDue = null; // [4a]
 
@@ -489,8 +489,9 @@ export class Task {
      * @returns {Array.<string>} The task's calendar days
      */
     dates(daysLimit) {
+        var task = this;
         var dates = [];
-        var startDate = this.firstCalendarDate(); // [1]
+        var startDate = task.firstCalendarDate(); // [1]
 
         var today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -501,18 +502,18 @@ export class Task {
 
         if (startDate !== null && startDate <= endDate) { // [3]
             dates.push(Utils.getDateKey(startDate)); // [4]
-    
-            if (this.type === 'daily' && !this.isOneTimeDaily()) { // [5]
-                var frequency = this.frequency;
-                var repeat = this.repeat;
-                var daysOfMonth = this.daysOfMonth;
-                var weeksOfMonth = this.weeksOfMonth;
+
+            if (task.type === 'daily' && !task.isOneTimeDaily()) { // [5]
+                var frequency = task.frequency;
+                var repeat = task.repeat;
+                var daysOfMonth = task.daysOfMonth;
+                var weeksOfMonth = task.weeksOfMonth;
 
                 var freq = null; // [6a]
                 var bymonthday = []; // [6b]
                 var bysetpos = []; // [6c]
                 var byweekday = []; // [6d]
-                var interval = this.everyX; // [6e]
+                var interval = task.everyX; // [6e]
 
                 if (frequency === 'daily') {
                     freq = RRule.DAILY; // [6a]
@@ -523,7 +524,7 @@ export class Task {
                 else if (frequency === 'monthly') {
                     freq = RRule.MONTHLY; // [6a]
 
-                    if (daysOfMonth && daysOfMonth.length > 0) {
+                    if (daysOfMonth.length > 0) {
                         for (var i = 0; i < daysOfMonth.length; i++) {
                             bymonthday.push(daysOfMonth[i] === 31 ? -1 : daysOfMonth[i]); // [6b]
                         }
@@ -561,9 +562,9 @@ export class Task {
                         byweekday.push(RRule.SA); // [6d]
                     }
                 }
-    
+
                 var rule = null;
-    
+
                 if (byweekday.length > 0) {
                     if (bysetpos.length > 0) {
                         rule = new RRule({ // [7]
@@ -606,7 +607,7 @@ export class Task {
                         wkst: RRule.SU
                     }).all();
                 }
-    
+
                 if (rule !== null && rule.length > 0) {
                     for (var i = 0; i < rule.length; i++) {
                         var thisDate = Utils.getDateKey(rule[i]);
@@ -628,10 +629,14 @@ export class Task {
     badgeHtml() {
         var task = this;
 
-        var badgeDifficultyClass = 'difficulty1';
-        var badgeDifficultyDescription = 'Trivial';
+        var badgeDifficultyClass = 'difficulty0';
+        var badgeDifficultyDescription = 'Invalid';
         if (typeof task.priority === 'number') {
-            if (task.priority === 1) {
+            if (task.priority === .1) {
+                badgeDifficultyClass = 'difficulty1';
+                badgeDifficultyDescription = 'Trivial';
+            }
+            else if (task.priority === 1) {
                 badgeDifficultyClass = 'difficulty2';
                 badgeDifficultyDescription = 'Easy';
             }
@@ -697,20 +702,18 @@ export class Task {
             tooltipHtml += `<div>${md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.notes.trim())))}</div>`;
         }
 
-        if (task.checklist != null) {
-            if (task.checklist.length > 0) {
-                tooltipHtml += '<ul class="list-unstyled">';
+        if (task.checklist.length > 0) {
+            tooltipHtml += '<ul class="list-unstyled">';
 
-                task.checklist.forEach(function (value) {
-                    var liClasses = (value.completed === true ? 'text-muted' : '');
-                    var iconClass = (value.completed === true ? 'far fa-check-square' : 'far fa-square');
-                    var iconAriaLabel = (value.completed === true ? 'Complete' : 'Incomplete');
+            task.checklist.forEach(function (value) {
+                var liClasses = (value.completed === true ? 'text-muted' : '');
+                var iconClass = (value.completed === true ? 'far fa-check-square' : 'far fa-square');
+                var iconAriaLabel = (value.completed === true ? 'Complete' : 'Incomplete');
 
-                    tooltipHtml += `<li${(liClasses != '' ? ' class="' + liClasses + '"' : '')} data-itemid="${value.id}"><i class="${iconClass} task-checklist-icon-js" aria-label="${iconAriaLabel}"></i> ${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(value.text.trim())))).html()}</li>`;
-                });
+                tooltipHtml += `<li${(liClasses != '' ? ' class="' + liClasses + '"' : '')} data-itemid="${value.id}"><i class="${iconClass} task-checklist-icon-js" aria-label="${iconAriaLabel}"></i> ${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(value.text.trim())))).html()}</li>`;
+            });
 
-                tooltipHtml += '</ul>';
-            }
+            tooltipHtml += '</ul>';
         }
 
         tooltipHtml += '<small>Click task for more info</small>';

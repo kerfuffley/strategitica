@@ -65,6 +65,7 @@ $badge-task-height: 1rem;
     word-break: break-word;
 }
 
+.badge-difficulty0,
 .badge-difficulty1 {
     @include badge-difficulty-variant($white);
 }

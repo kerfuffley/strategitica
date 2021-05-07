@@ -55,33 +55,9 @@ export class User {
                 });
 
                 user.tasks = allTasks;
-
-                if (userInfo[0].data !== null) {
-                    user.name = userInfo[0].data.auth.local.username;
-                    user.displayName = userInfo[0].data.profile.name;
-                    user.class = userInfo[0].data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : userInfo[0].data.stats.class.charAt(0).toUpperCase() + userInfo[0].data.stats.class.slice(1);
-                    user.level = userInfo[0].data.stats.lvl;
-                    user.hp = userInfo[0].data.stats.hp;
-                    user.hpMax = Math.floor(userInfo[0].data.stats.maxHealth);
-                    user.exp = Math.floor(userInfo[0].data.stats.exp);
-                    user.expToNextLevel = userInfo[0].data.stats.toNextLevel;
-                    user.mp = Math.floor(userInfo[0].data.stats.mp);
-                    user.mpMax = userInfo[0].data.stats.maxMP;
-                    user.isSleeping = userInfo[0].data.preferences.sleep;
-                    user.dayStart = userInfo[0].data.preferences.dayStart;
-
-                    var message = `User info loaded successfully. Here's some info about you:<br>
-                         Username: @${user.name}<br>
-                         Display Name: ${user.displayName}<br>
-                         Class: ${user.class}<br>
-                         Level: ${user.level}<br>
-                         HP: ${user.hp} / ${user.hpMax}<br>
-                         Experience: ${user.exp} / ${user.expToNextLevel}<br>
-                         MP: ${user.mp} / ${user.mpMax}<br>
-                         Resting in the tavern: ${user.isSleeping}<br>
-                         Day start: ${user.dayStart}<br>
-                         Tags: ${Object.values(user.tags)}`;
-                    Utils.updateLogs(message);
+                
+                if ('data' in userInfo[0]) {
+                    user.setUserInfo(userInfo[0].data);
                 }
 
                 if (onComplete) {
@@ -266,32 +242,8 @@ export class User {
             try {
                 $.ajax(options)
                 .done(function (data) {
-                    if (data.data !== null) {
-                        user.name = data.data.auth.local.username;
-                        user.displayName = data.data.profile.name;
-                        user.class = data.data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : data.data.stats.class.charAt(0).toUpperCase() + data.data.stats.class.slice(1);
-                        user.level = data.data.stats.lvl;
-                        user.hp = data.data.stats.hp;
-                        user.hpMax = Math.floor(data.data.stats.maxHealth);
-                        user.exp = Math.floor(data.data.stats.exp);
-                        user.expToNextLevel = data.data.stats.toNextLevel;
-                        user.mp = Math.floor(data.data.stats.mp);
-                        user.mpMax = data.data.stats.maxMP;
-                        user.isSleeping = data.data.preferences.sleep;
-                        user.dayStart = data.data.preferences.dayStart;
-    
-                        var message = `User info loaded successfully. Here's some info about you:<br>
-                             Username: @${user.name}<br>
-                             Display Name: ${user.displayName}<br>
-                             Class: ${user.class}<br>
-                             Level: ${user.level}<br>
-                             HP: ${user.hp} / ${user.hpMax}<br>
-                             Experience: ${user.exp} / ${user.expToNextLevel}<br>
-                             MP: ${user.mp} / ${user.mpMax}<br>
-                             Resting in the tavern: ${user.isSleeping}<br>
-                             Day start: ${user.dayStart}<br>
-                             Tags: ${Object.values(user.tags)}`;
-                        Utils.updateLogs(message);
+                    if ('data' in data) {
+                        user.setUserInfo(data.data);
                     }
 
                     onComplete();
@@ -316,6 +268,75 @@ export class User {
         }
         else {
             return $.ajax(options);
+        }
+    }
+
+    setUserInfo(data) {
+        var user = this;
+
+        if (data !== null) {
+            if ('auth' in data) {
+                if ('local' in data.auth) {
+                    if ('username' in data.auth.local) {
+                        user.name = data.auth.local.username;
+                    }
+                }
+            }
+
+            if ('profile' in data) {
+                if ('name' in data.profile) {
+                    user.displayName = data.profile.name;
+                }
+            }
+            
+            if ('stats' in data) {
+                if ('class' in data.stats) {
+                    user.class = data.stats.class.toLowerCase() === 'wizard' ? 'Mage' : data.stats.class.charAt(0).toUpperCase() + data.stats.class.slice(1);
+                }
+                if ('lvl' in data.stats) {
+                    user.level = data.stats.lvl;
+                }
+                if ('hp' in data.stats) {
+                    user.hp = data.stats.hp;
+                }
+                if ('maxHealth' in data.stats) {
+                    user.hpMax = Math.floor(data.stats.maxHealth);
+                }
+                if ('exp' in data.stats) {
+                    user.exp = Math.floor(data.stats.exp);
+                }
+                if ('toNextLevel' in data.stats) {
+                    user.expToNextLevel = data.stats.toNextLevel;
+                }
+                if ('mp' in data.stats) {
+                    user.mp = Math.floor(data.stats.mp);
+                }
+                if ('maxMP' in data.stats) {
+                    user.mpMax = data.stats.maxMP;
+                }
+            }
+
+            if ('preferences' in data) {
+                if ('sleep' in data.preferences) {
+                    user.isSleeping = data.preferences.sleep;
+                }
+                if ('dayStart' in data.preferences) {
+                    user.dayStart = data.preferences.dayStart;
+                }
+            }
+
+            var message = `User info loaded successfully. Here's some info about you:<br>
+                 Username: @${user.name}<br>
+                 Display Name: ${user.displayName}<br>
+                 Class: ${user.class}<br>
+                 Level: ${user.level}<br>
+                 HP: ${user.hp} / ${user.hpMax}<br>
+                 Experience: ${user.exp} / ${user.expToNextLevel}<br>
+                 MP: ${user.mp} / ${user.mpMax}<br>
+                 Resting in the tavern: ${user.isSleeping}<br>
+                 Day start: ${user.dayStart}<br>
+                 Tags: ${Object.values(user.tags)}`;
+            Utils.updateLogs(message);
         }
     }
 
