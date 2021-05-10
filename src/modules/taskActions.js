@@ -500,6 +500,21 @@ export function openModal(taskId, user) {
             $('#task-frequency-static-container').addClass('d-none');
             $('#task-frequency-static').html('');
         }
+        
+
+        $('#task-time-static').html(task.timeOfDay.charAt(0).toUpperCase() + task.timeOfDay.slice(1));
+
+
+        var taskDuration = task.duration();
+        if (taskDuration > 0) {
+            $('#task-duration-static-container').removeClass('d-none');
+            $('#task-duration-static').html(Utils.formatDuration(taskDuration));
+        }
+        else {
+            $('#task-duration-static-container').addClass('d-none');
+            $('#task-duration-static').html('');
+        }
+
 
         if (Object.keys(user.tags).length > 0 && task.tags !== null && task.tags.length > 0) {
             $('#task-tags-static').empty();
