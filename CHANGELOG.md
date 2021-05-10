@@ -6,8 +6,9 @@
 
 ### [Strategitica](https://github.com/iymeko/strategitica) Changelog
 
-## 1.3.2 (10 May, 2021)
+## 1.4.0 (10 May, 2021)
 
+* [#48](https://github.com/iymeko/strategitica/issues/48) resolved - Task duration and time of day now appear like other task attributes. The tags associated with them will still show up with the rest of the task's tags.
 * [#53](https://github.com/iymeko/strategitica/issues/53) resolved - Dailies with weekly recurrence that have no days of the week selected will no longer show in the calendar.
 
 ## 1.3.1 (6 May, 2021)
