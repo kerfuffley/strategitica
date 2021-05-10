@@ -5,7 +5,6 @@ import * as TaskActions from './modules/taskActions.js';
 
 import $ from 'jquery';
 import '../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js';
-import md from 'habitica-markdown';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import './sass/style.scss';

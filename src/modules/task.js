@@ -196,7 +196,10 @@ export class Task {
             's': 'Saturday'
         };
 
-        if (task.frequency != null) {
+        if (task.isOneTimeDaily()) {
+            frequencyHtml = 'One time';
+        }
+        else if (task.frequency !== '') {
             var frequencyName = '';
 
             if (task.frequency === 'daily') {

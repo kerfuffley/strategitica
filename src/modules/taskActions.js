@@ -452,6 +452,9 @@ export function openModal(taskId, user) {
         }
 
 
+        $('#task-type-static').html(task.type === 'todo' ? 'To Do' : (task.type === 'daily' ? 'Daily' : ''));
+
+
         var difficultyHtml = 'Invalid';
 
         if (typeof task.priority === 'number') {
