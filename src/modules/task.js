@@ -208,7 +208,7 @@ export class Task {
             if (task.frequency === 'weekly') {
                 frequencyName = 'week';
 
-                if (task.repeat != null) {
+                if (task.repeat !== null) {
                     var repeatingDays = [];
 
                     for (const property in task.repeat) {
@@ -387,31 +387,22 @@ export class Task {
         var isDue = this.isDue;
         var completed = this.completed;
 
-        var message = '';
-
         if (this.type === 'daily') { // [1]
-            message += 'firstCalendarDate() for ' + this.text;
-            if (this.startDate !== null) { // [1]
+            if (this.startDate !== '') { // [1]
                 firstDate = new Date(this.startDate);
                 firstDate.setHours(0, 0, 0, 0);
-                message += '\n\tstartDate found: ' + firstDate;
 
                 if (firstDate < today) { // [2]
-                    message += '\n\tdate in past';
                     if (isDue !== null && isDue === true) { // [2a]
-                        message += ', and it is due, so set to today';
                         firstDate = today; // [2a]
                     }
                     else { // [2b]
-                        message += ', and not due, so set to null';
                         firstDate = null; // [2b]
                     }
                 }
 
                 if (firstDate !== null) { // [3]
-                    message += '\n\tnot null at this point';
                     if (Utils.getDateKey(firstDate) === Utils.getDateKey(today) && completed !== null && completed === true) { // [3]
-                        message += '\n\tdue today and completed, so set to null';
                         firstDate = null; // [3]
                     }
                 }
@@ -431,8 +422,6 @@ export class Task {
 
                 firstDate = earliestNextDue; // [4b]
                 firstDate.setHours(0, 0, 0, 0);
-
-                message += '\n\tdate found from nextDue: ' + firstDate;
             }
         }
         else if (this.type === 'todo') { // [5]
@@ -458,18 +447,25 @@ export class Task {
     /**
      * Gets a list of dates to show a task for in the calendar.
      * 
-     * 1.   Get the earliest date to look at with {@link firstCalendarDate}
-     * 2.   Get the latest date to look at with today and daysLimit
-     * 3.   If [1] was found and it's before [2]...
-     * 4.   Add [1] to the list of dates, but in the nice format of
+     * 1.   Apparently, Habitica allows you to create a daily with a weekly
+     *      frequency without checking any day-of-the-week checkboxes. When you
+     *      do this though, the task doesn't ever seem to be "due". It has a
+     *      start date, but no future due dates. So, I think we'll just decide
+     *      that this task is invalid (in terms of its dates, anyway) and
+     *      therefore we won't get any dates for it, and it won't show up on
+     *      the calendar.
+     * 2.   Get the earliest date to look at with {@link firstCalendarDate}
+     * 3.   Get the latest date to look at with today and daysLimit
+     * 4.   If [2] was found and it's before [3]...
+     * 5.   Add [2] to the list of dates, but in the nice format of
      *      {@link Utils.getDateKey}, since that's the format the calendar will
      *      be using
-     * 5.   If this task is a daily and it's not a one-time daily, then we can
+     * 6.   If this task is a daily and it's not a one-time daily, then we can
      *      look at other dates for this task. Todo's aren't recurring tasks,
      *      so dailies are the only type of task this should apply to. And
      *      one-time dailies should only appear once on the calendar, even
      *      though Habitica sees more dates for them.
-     * 6.   Now, we're basically setting up some other params that we'll pass
+     * 7.   Now, we're basically setting up some other params that we'll pass
      *      to rrule.js soon. These include (but are not limited to):
      *      a.  The task frequency (either daily, weekly, monthly or yearly)
      *      b.  The day of the month the task should recur on. Only applicable
@@ -477,16 +473,16 @@ export class Task {
      *      c.  The week of the month the task should recur on. Only applicable
      *          for monthly tasks where this option is selected.
      *      d.  The days of the week that this task repeats on. This only
-     *          applies to weekly tasks, or monthly tasks where [6c] applies.
+     *          applies to weekly tasks, or monthly tasks where [7c] applies.
      *      e.  The interval of each frequency iteration. For example:
      *          - 2 if a task is due every 2 weeks
      *          - 3 if a task is due every 3 days
      *          - 1 if a task is due every month
      *          - 5 if a task is due every 5 days
-     * 7.   We can finally use the params we set up in [6] and pass them to
+     * 8.   We can finally use the params we set up in [7] and pass them to
      *      rrule.
-     * 8.   Now we have those future dates, let's add them to the list, making
-     *      sure not to add any duplicate dates. And, just like with [4],
+     * 9.   Now we have those future dates, let's add them to the list, making
+     *      sure not to add any duplicate dates. And, just like with [5],
      *      they'll be formatted nicely.
      * @param {number} daysLimit - How far in the future to look as a number of days
      * @returns {Array.<string>} The task's calendar days
@@ -494,128 +490,146 @@ export class Task {
     dates(daysLimit) {
         var task = this;
         var dates = [];
-        var startDate = task.firstCalendarDate(); // [1]
+        var taskDatesValid = true; // [1]
 
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
+        if (task.frequency === 'weekly' && task.repeat !== null) {
+            var daysOfWeekCount = 0;
 
-        var endDate = new Date();
-        endDate.setDate(today.getDate() + daysLimit); // [2]
-        endDate.setHours(0, 0, 0, 0);
-
-        if (startDate !== null && startDate <= endDate) { // [3]
-            dates.push(Utils.getDateKey(startDate)); // [4]
-
-            if (task.type === 'daily' && !task.isOneTimeDaily()) { // [5]
-                var frequency = task.frequency;
-                var repeat = task.repeat;
-                var daysOfMonth = task.daysOfMonth;
-                var weeksOfMonth = task.weeksOfMonth;
-
-                var freq = null; // [6a]
-                var bymonthday = []; // [6b]
-                var bysetpos = []; // [6c]
-                var byweekday = []; // [6d]
-                var interval = task.everyX; // [6e]
-
-                if (frequency === 'daily') {
-                    freq = RRule.DAILY; // [6a]
+            for (const property in task.repeat) {
+                if (task.repeat[property] === true) {
+                    daysOfWeekCount++;
                 }
-                else if (frequency === 'weekly') {
-                    freq = RRule.WEEKLY; // [6a]
-                }
-                else if (frequency === 'monthly') {
-                    freq = RRule.MONTHLY; // [6a]
+            }
 
-                    if (daysOfMonth.length > 0) {
-                        for (var i = 0; i < daysOfMonth.length; i++) {
-                            bymonthday.push(daysOfMonth[i] === 31 ? -1 : daysOfMonth[i]); // [6b]
+            if (daysOfWeekCount === 0) { // [1]
+                taskDatesValid = false; // [1]
+            }
+        }
+
+        if (taskDatesValid) {
+            var startDate = task.firstCalendarDate(); // [2]
+    
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+    
+            var endDate = new Date();
+            endDate.setDate(today.getDate() + daysLimit); // [3]
+            endDate.setHours(0, 0, 0, 0);
+    
+            if (startDate !== null && startDate <= endDate) { // [4]
+                dates.push(Utils.getDateKey(startDate)); // [5]
+    
+                if (task.type === 'daily' && !task.isOneTimeDaily()) { // [6]
+                    var frequency = task.frequency;
+                    var repeat = task.repeat;
+                    var daysOfMonth = task.daysOfMonth;
+                    var weeksOfMonth = task.weeksOfMonth;
+    
+                    var freq = null; // [7a]
+                    var bymonthday = []; // [7b]
+                    var bysetpos = []; // [7c]
+                    var byweekday = []; // [7d]
+                    var interval = task.everyX; // [7e]
+    
+                    if (frequency === 'daily') {
+                        freq = RRule.DAILY; // [7a]
+                    }
+                    else if (frequency === 'weekly') {
+                        freq = RRule.WEEKLY; // [7a]
+                    }
+                    else if (frequency === 'monthly') {
+                        freq = RRule.MONTHLY; // [7a]
+    
+                        if (daysOfMonth.length > 0) {
+                            for (var i = 0; i < daysOfMonth.length; i++) {
+                                bymonthday.push(daysOfMonth[i] === 31 ? -1 : daysOfMonth[i]); // [7b]
+                            }
+                        }
+                        if (weeksOfMonth && weeksOfMonth.length > 0) {
+                            for (var i = 0; i < weeksOfMonth.length; i++) {
+                                bysetpos.push(weeksOfMonth[i] + 1); // [7c]
+                            }
                         }
                     }
-                    if (weeksOfMonth && weeksOfMonth.length > 0) {
-                        for (var i = 0; i < weeksOfMonth.length; i++) {
-                            bysetpos.push(weeksOfMonth[i] + 1); // [6c]
+                    else if (frequency === 'yearly') {
+                        freq = RRule.YEARLY; // [7a]
+                    }
+    
+                    if (frequency === 'weekly' || (frequency === 'monthly' && weeksOfMonth && weeksOfMonth.length > 0)) {
+                        if (repeat.su === true) {
+                            byweekday.push(RRule.SU); // [7d]
+                        }
+                        if (repeat.m === true) {
+                            byweekday.push(RRule.MO); // [7d]
+                        }
+                        if (repeat.t === true) {
+                            byweekday.push(RRule.TU); // [7d]
+                        }
+                        if (repeat.w === true) {
+                            byweekday.push(RRule.WE); // [7d]
+                        }
+                        if (repeat.th === true) {
+                            byweekday.push(RRule.TH); // [7d]
+                        }
+                        if (repeat.f === true) {
+                            byweekday.push(RRule.FR); // [7d]
+                        }
+                        if (repeat.s === true) {
+                            byweekday.push(RRule.SA); // [7d]
                         }
                     }
-                }
-                else if (frequency === 'yearly') {
-                    freq = RRule.YEARLY; // [6a]
-                }
-
-                if (frequency === 'weekly' || (frequency === 'monthly' && weeksOfMonth && weeksOfMonth.length > 0)) {
-                    if (repeat.su === true) {
-                        byweekday.push(RRule.SU); // [6d]
+    
+                    var rule = null;
+    
+                    if (byweekday.length > 0) {
+                        if (bysetpos.length > 0) {
+                            rule = new RRule({ // [8]
+                                freq: freq, // [7a]
+                                dtstart: startDate,
+                                until: endDate,
+                                interval: interval, // [7e]
+                                wkst: RRule.SU,
+                                byweekday: byweekday, // [7d]
+                                bysetpos: bysetpos // [7c]
+                            }).all();
+                        }
+                        else {
+                            rule = new RRule({ // [8]
+                                freq: freq, // [7a]
+                                dtstart: startDate,
+                                until: endDate,
+                                interval: interval, // [7e]
+                                wkst: RRule.SU,
+                                byweekday: byweekday // [7d]
+                            }).all();
+                        }
                     }
-                    if (repeat.m === true) {
-                        byweekday.push(RRule.MO); // [6d]
-                    }
-                    if (repeat.t === true) {
-                        byweekday.push(RRule.TU); // [6d]
-                    }
-                    if (repeat.w === true) {
-                        byweekday.push(RRule.WE); // [6d]
-                    }
-                    if (repeat.th === true) {
-                        byweekday.push(RRule.TH); // [6d]
-                    }
-                    if (repeat.f === true) {
-                        byweekday.push(RRule.FR); // [6d]
-                    }
-                    if (repeat.s === true) {
-                        byweekday.push(RRule.SA); // [6d]
-                    }
-                }
-
-                var rule = null;
-
-                if (byweekday.length > 0) {
-                    if (bysetpos.length > 0) {
-                        rule = new RRule({ // [7]
-                            freq: freq, // [6a]
+                    else if (bymonthday.length > 0) {
+                        rule = new RRule({ // [8]
+                            freq: freq, // [7a]
                             dtstart: startDate,
                             until: endDate,
-                            interval: interval, // [6e]
+                            interval: interval, // [7e]
                             wkst: RRule.SU,
-                            byweekday: byweekday, // [6d]
-                            bysetpos: bysetpos // [6c]
+                            bymonthday: bymonthday // [7b]
                         }).all();
                     }
                     else {
-                        rule = new RRule({ // [7]
-                            freq: freq, // [6a]
+                        rule = new RRule({ // [8]
+                            freq: freq, // [7a]
                             dtstart: startDate,
                             until: endDate,
-                            interval: interval, // [6e]
-                            wkst: RRule.SU,
-                            byweekday: byweekday // [6d]
+                            interval: interval, // [7e]
+                            wkst: RRule.SU
                         }).all();
                     }
-                }
-                else if (bymonthday.length > 0) {
-                    rule = new RRule({ // [7]
-                        freq: freq, // [6a]
-                        dtstart: startDate,
-                        until: endDate,
-                        interval: interval, // [6e]
-                        wkst: RRule.SU,
-                        bymonthday: bymonthday // [6b]
-                    }).all();
-                }
-                else {
-                    rule = new RRule({ // [7]
-                        freq: freq, // [6a]
-                        dtstart: startDate,
-                        until: endDate,
-                        interval: interval, // [6e]
-                        wkst: RRule.SU
-                    }).all();
-                }
-
-                if (rule !== null && rule.length > 0) {
-                    for (var i = 0; i < rule.length; i++) {
-                        var thisDate = Utils.getDateKey(rule[i]);
-                        if (dates.indexOf(thisDate) === -1) { // [8]
-                            dates.push(thisDate); // [8]
+    
+                    if (rule !== null && rule.length > 0) {
+                        for (var i = 0; i < rule.length; i++) {
+                            var thisDate = Utils.getDateKey(rule[i]);
+                            if (dates.indexOf(thisDate) === -1) { // [9]
+                                dates.push(thisDate); // [9]
+                            }
                         }
                     }
                 }
