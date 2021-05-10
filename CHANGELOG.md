@@ -6,9 +6,13 @@
 
 ### [Strategitica](https://github.com/iymeko/strategitica) Changelog
 
+## 1.3.2 (10 May, 2021)
+
+* [#53](https://github.com/iymeko/strategitica/issues/53) resolved - Dailies with weekly recurrence that have no days of the week selected will no longer show in the calendar.
+
 ## 1.3.1 (6 May, 2021)
 
-* [#44](https://github.com/iymeko/strategitica/issues/44) resolved - some user/task attributes weren't being handled correctly in terms of data types, which caused Strategitica to hang for some users.
+* [#44](https://github.com/iymeko/strategitica/issues/44) resolved - Some user/task attributes weren't being handled correctly in terms of data types, which caused Strategitica to hang for some users.
 
 
 ## 1.3.0 (27 April, 2021)
