@@ -6,6 +6,11 @@
 
 ### [Strategitica](https://github.com/iymeko/strategitica) Changelog
 
+## 1.3.1 (6 May, 2021)
+
+* [#44](https://github.com/iymeko/strategitica/issues/44) resolved - some user/task attributes weren't being handled correctly in terms of data types, which caused Strategitica to hang for some users.
+
+
 ## 1.3.0 (27 April, 2021)
 
 * [#36](https://github.com/iymeko/strategitica/issues/36) resolved - The default number of days that will be shown in the calendar has been reduced to 90 from 186, and the days URL parameter has been added. For example, add ?days=30 to the Strategitica URL to show 30 days in the future. The maximum days allowed is 180, so any number above that will cause Strategitica to show 180 days in the future.
