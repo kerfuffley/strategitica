@@ -505,7 +505,7 @@ export function openModal(taskId, user) {
         $('#task-time-static').html(task.timeOfDay.charAt(0).toUpperCase() + task.timeOfDay.slice(1));
 
 
-        var taskDuration = task.duration();
+        var taskDuration = task.duration;
         if (taskDuration > 0) {
             $('#task-duration-static-container').removeClass('d-none');
             $('#task-duration-static').html(Utils.formatDuration(taskDuration));

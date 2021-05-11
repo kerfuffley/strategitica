@@ -263,7 +263,8 @@ function loadTasks() {
                     Next Due: ${task.nextDue}<br>
                     Checklist: ${task.checklist}<br>
                     Value: ${task.value}<br>
-                    Time of Day: ${task.timeOfDay}`;
+                    Time of Day: ${task.timeOfDay}<br>
+                    Duration: ${Utils.formatDuration(task.duration)}`;
             Utils.updateLogs(taskInfo);
 
             for (var j = 0; j < taskDates.length; j++) {
@@ -312,7 +313,7 @@ function loadTasks() {
                 $(currentDayCalendarId + ' .calendar-day-' + key + '-js').removeClass('d-none');
 
                 timesOfDay[key].forEach(function (value) {
-                    var taskDuration = value.duration();
+                    var taskDuration = value.duration;
                     dayDuration += taskDuration;
                     timeOfDayDuration += taskDuration;
                     if (taskDuration === 0) {
