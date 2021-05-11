@@ -30,6 +30,7 @@ export class Task {
         this.checklist = typeof taskObject.checklist !== 'undefined' ? (Array.isArray(taskObject.checklist) ? taskObject.checklist : []) : [];
         this.value = typeof taskObject.value === 'number' ? taskObject.value : 0;
         this.timeOfDay = 'whenever';
+        this.duration = 0;
     }
 
     create() {
@@ -50,6 +51,8 @@ export class Task {
         if (timeOfDayTagCount > 1) {
             this.timeOfDay = 'whenever';
         }
+
+        this.duration = this.getDuration();
     }
 
     /**
@@ -123,38 +126,40 @@ export class Task {
     /**
      * Check if a given task has a certain task indicating its duration, and
      * returns that duration as a number of minutes. Tags intended for use as
-     * task durations must end in the format "##:##" or "#:##" for this to
-     * work. If a task doesn't have a duration tag, or if it has more than one
-     * duration tag, or if a number can't be determined from the tag, 0 is
-     * returned. 
+     * task durations must end in the format "##:##" for this to work. If a
+     * task doesn't have a duration tag, or if it has multiple duration tags
+     * with different durations, or if a number can't be determined from the
+     * tag, 0 is returned. 
      * @returns {number} The task duration in minutes
      */
-    duration() {
+    getDuration() {
         var task = this;
         var userTagNames = this.user.tags;
         var duration = 0;
+        var durations = [];
 
         if (Object.keys(userTagNames).length > 0) {
-            var durationTagId = '';
-
             var regex = /\[strategitica\|duration\|(\d{2}):(\d{2})\]$/mi;
 
             task.tags.forEach(function (value) {
-                if (userTagNames[value].match(regex) !== null) {
-                    if (durationTagId === '') {
-                        durationTagId = value;
-                    }
-                    else {
-                        durationTagId = '';
+                var regexResult = userTagNames[value].match(regex);
+
+                if (regexResult !== null) {
+                    var durationHours = Number(regexResult[1]);
+                    var durationMinutes = Number(regexResult[2]);
+                    var tagDuration = (durationHours * 60) + durationMinutes;
+
+                    if (!durations.includes(tagDuration)) {
+                        durations.push(tagDuration);
                     }
                 }
             });
 
-            if (durationTagId !== '') {
-                var regexResult = userTagNames[durationTagId].match(regex);
-                var durationHours = Number(regexResult[1]);
-                var durationMinutes = Number(regexResult[2]);
-                duration = (durationHours * 60) + durationMinutes;
+            if (durations.length === 1) {
+                duration = durations[0];
+            }
+            else if (durations.length > 1) {
+                Utils.updateLogs('FYI: Varying durations were found for "' + task.text + '", so all of its durations will be ignored.', true);
             }
 
             if (duration.isNaN) {
@@ -700,7 +705,7 @@ export class Task {
             }
         }
 
-        var taskDuration = task.duration();
+        var taskDuration = task.duration;
 
         return `<button type="button" class="badge badge-task badge-task-js badge-${badgeDifficultyClass} badge-${badgeValueClass}" data-taskid="${task.id}"><span class="badge-title badge-title-js">${$(md.render(Utils.escapeHtmlBrackets(Utils.escapeQuotes(task.text.trim())))).html()}</span><span class="sr-only">(Task value: ${badgeValueDescription}; Task difficulty: ${badgeDifficultyDescription})</span>${taskDuration > 0 ? '<span class="badge-addon">' + Utils.formatDuration(taskDuration) + '</span>' : ''}</button>`;
     }
