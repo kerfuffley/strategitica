@@ -22,7 +22,7 @@ For example, if you add a tag named "[strategitica|duration|00:15]" (without quo
 
 **Note:** As shown above, this only works for hh:mm format. For example, a tag for an hour should end with [strategitica|duration|01:00], not [strategitica|duration|1:00]. Something like [strategitica|duration|01:00:00] is also not supported.
 
-**Another Note:** If a task has more than one duration tag, Strategitica won't recognize that the task has a duration. Use only one duration tag on a task.
+**Another Note:** If a task has more than one duration tag, Strategitica won't recognize that the task has a duration **unless all of that task's duration tags are for the same duration**.
 
 ### Task Time of Day ###
 

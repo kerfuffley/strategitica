@@ -6,6 +6,10 @@
 
 ### [Strategitica](https://github.com/iymeko/strategitica) Changelog
 
+## 1.4.1 (11 May, 2021)
+
+* [#52](https://github.com/iymeko/strategitica/issues/52) resolved - Tasks with multiple duration tags that are all the same duration will now be able to show that duration. Previously, if a task had more than one duration tag (regardless of their duration), all duration tags would be ignored.
+
 ## 1.4.0 (10 May, 2021)
 
 * [#48](https://github.com/iymeko/strategitica/issues/48) resolved - Task duration and time of day now appear like other task attributes. The tags associated with them will still show up with the rest of the task's tags.
